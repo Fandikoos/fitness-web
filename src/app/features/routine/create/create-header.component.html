@@ -1,0 +1,8 @@
+<div class="mb-4">
+  <ul class="steps steps-horizontal w-full mb-3">
+    <li class="step" [class.step-primary]="currentStep() >= 1">Basic info</li>
+    <li class="step" [class.step-primary]="currentStep() >= 2">Exercises</li>
+  </ul>
+  <h2 class="card-title text-2xl">{{ title() }}</h2>
+  <p class="text-base-content/60 text-sm">{{ subtitle() }}</p>
+</div>

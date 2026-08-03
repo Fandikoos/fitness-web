@@ -1,0 +1,42 @@
+<div class="flex justify-center px-4 py-8">
+  <div class="card bg-base-200 shadow-xl w-full max-w-2xl">
+    <div class="card-body">
+      <app-create-header
+        [currentStep]="2"
+        title="Add exercises"
+        subtitle="Choose exercises for each training day"
+      />
+
+      <!-- Day accordions -->
+      <div class="join join-vertical w-full mt-2">
+        @for (day of dayOfWeeks; track day) {
+          <div class="collapse collapse-arrow join-item border border-base-300 bg-base-100">
+            <input type="checkbox" />
+            <div class="collapse-title font-semibold flex items-center gap-2">
+              {{ day }}
+            </div>
+            <div class="collapse-content">
+              <app-select-exercises [dayOfWeek]="day" />
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Navigation -->
+      <div class="card-actions justify-between mt-4">
+        <button type="button" class="btn btn-ghost" (click)="onBack()">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+          </svg>
+          Back
+        </button>
+        <button type="button" class="btn btn-primary" (click)="onSave()">
+          Save routine
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
