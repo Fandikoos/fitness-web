@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { ProgramRequest, ProgramResponse } from '../../shared/interfaces/program.interface';
-import { catchError, Observable, of, shareReplay, tap, throwError } from 'rxjs';
+import { catchError, delay, Observable, of, shareReplay, tap, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'

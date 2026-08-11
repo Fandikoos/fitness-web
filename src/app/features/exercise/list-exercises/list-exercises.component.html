@@ -1,3 +1,69 @@
-<p>
-  list-exercises works!
-</p>
+<dialog #exerciseDialog class="modal">
+  <div class="modal-box max-w-2xl">
+
+    <h3 class="text-lg font-bold">Select exercises</h3>
+    <p class="text-base-content/60 text-sm mt-1">
+      Pick the exercises for this day
+    </p>
+
+    <!-- Loading -->
+    @if (loading()) {
+      <div class="flex justify-center py-8">
+        <span class="loading loading-spinner loading-lg"></span>
+      </div>
+    }
+
+    <!-- Error -->
+    @if (error()) {
+      <div class="alert alert-error mt-4">
+        <span>{{ error() }}</span>
+      </div>
+    }
+
+    <!-- Exercise list -->
+    @if (!loading() && !error()) {
+      <div class="mt-4 max-h-80 overflow-y-auto">
+        @for (exercise of exercises(); track exercise.id) {
+          <div
+            class="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-base-200 transition-colors"
+            [class]="isSelected(exercise.id) ? 'bg-primary/10' : ''"
+            (click)="toggleExercise(exercise.id)"
+          >
+            <input
+              type="checkbox"
+              class="checkbox checkbox-primary"
+              [checked]="isSelected(exercise.id)"
+              (click)="$event.stopPropagation()"
+              (change)="toggleExercise(exercise.id)"
+            />
+            <div class="flex-1">
+              <p class="font-medium">{{ exercise.name }}</p>
+              <p class="text-sm text-base-content/60">{{ exercise.muscleGroup }}</p>
+            </div>
+          </div>
+        } @empty {
+          <p class="text-center text-base-content/60 py-6">No exercises found</p>
+        }
+      </div>
+    }
+
+    <!-- Actions -->
+    <div class="modal-action">
+      <button type="button" class="btn btn-ghost" (click)="close()">Cancel</button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="selection().size === 0"
+        (click)="confirm()"
+      >
+        Add {{ selection().size }} exercise{{ selection().size !== 1 ? 's' : '' }}
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Click outside to close -->
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>

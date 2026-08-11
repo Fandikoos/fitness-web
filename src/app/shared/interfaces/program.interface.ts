@@ -1,11 +1,11 @@
-import Routine from "./exercise.interface";
+import { RoutineResponse } from "./routine.interface";
 
 export interface ProgramResponse {
     id: number;
     name: string;
     description: string;
     createdAt: Date;
-    routines: Routine [];
+    routines: RoutineResponse[];
     active: boolean;
 }
 

@@ -5,3 +5,10 @@ export interface ExerciseSetResponse {
     reps: number;
     rpe: number;
 }
+
+export interface ExerciseSetRequest {
+    setNumber: number;
+    weightKg: number;
+    reps: number;
+    rpe: number;
+}

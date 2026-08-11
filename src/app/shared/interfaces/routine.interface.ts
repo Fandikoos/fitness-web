@@ -1,4 +1,5 @@
-import ExerciseResponse from "./exercise.interface";
+import { ExerciseSetRequest } from "./exercise-set.interface";
+import { ExerciseTemplateResponse } from "./exercise-template.interface";
 
 export interface RoutineResponse {
     id: number;
@@ -7,5 +8,20 @@ export interface RoutineResponse {
     description: string;
     programId: number;
     createdAt: Date;
-    exercises: ExerciseResponse[];
+    exercises: ExerciseTemplateResponse[];
+}
+
+export interface RoutineRequest {
+    name: string;
+    dayOfWeek: string;
+    description: string;
+    programId: number;
+    exercises: RoutineExerciseRequest[];
+}
+
+export interface RoutineExerciseRequest {
+    exerciseTemplateId: number;
+    order: number;
+    notes: string;
+    sets: ExerciseSetRequest[];
 }

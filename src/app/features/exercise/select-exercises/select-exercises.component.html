@@ -1,4 +1,108 @@
-<app-list-exercises />
+<form [formGroup]="routineForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
 
+  <!-- Routine name -->
+  <fieldset class="fieldset">
+    <legend class="fieldset-legend">Routine name *</legend>
+    <input
+      type="text"
+      formControlName="name"
+      placeholder="e.g. Chest & Triceps, Leg Day..."
+      class="input input-bordered w-full"
+      [class.input-error]="routineForm.controls.name.touched && routineForm.controls.name.invalid"
+    />
+    @if (routineForm.controls.name.touched && routineForm.controls.name.errors) {
+      <p class="fieldset-label text-error">
+        @if (routineForm.controls.name.errors['required']) {
+          Name is required
+        } @else if (routineForm.controls.name.errors['minlength']) {
+          Minimum 3 characters
+        }
+      </p>
+    }
+  </fieldset>
 
-<button>Seleccionar</button>
+  <!-- Day (read-only, set from parent) -->
+  <fieldset class="fieldset">
+    <legend class="fieldset-legend">Day</legend>
+    <input
+      type="text"
+      formControlName="day"
+      class="input input-bordered w-full"
+      readonly
+    />
+  </fieldset>
+
+  <!-- Description -->
+  <fieldset class="fieldset">
+    <legend class="fieldset-legend">Description</legend>
+    <textarea
+      formControlName="description"
+      placeholder="Describe the focus of this day..."
+      class="textarea textarea-bordered w-full resize-none"
+      rows="2"
+    ></textarea>
+    <span class="fieldset-label">Optional</span>
+  </fieldset>
+
+  <!-- Selected exercises -->
+  <div>
+    <div class="flex items-center justify-between mb-2">
+      <span class="font-medium text-sm">Exercises ({{ selectedExercises().length }})</span>
+      <button type="button" class="btn btn-outline btn-primary btn-sm" (click)="openExerciseModal()">
+        + Add exercises
+      </button>
+    </div>
+
+    @if (selectedExercises().length === 0) {
+      <p class="text-base-content/50 text-sm text-center py-4">
+        No exercises added yet
+      </p>
+    } @else {
+      <ul class="space-y-2">
+        @for (exercise of selectedExercises(); track exercise.id; let i = $index) {
+          <li class="flex items-center gap-3 bg-base-200 rounded-lg px-3 py-2">
+            <span class="badge badge-neutral badge-sm font-bold">{{ i + 1 }}</span>
+            <div class="flex flex-col gap-0.5">
+              <button
+                type="button"
+                class="btn btn-ghost btn-xs btn-square p-0"
+                [disabled]="i === 0"
+                (click)="moveExercise(i, 'up')"
+              >
+                ▲
+              </button>
+              <button
+                type="button"
+                class="btn btn-ghost btn-xs btn-square p-0"
+                [disabled]="i === selectedExercises().length - 1"
+                (click)="moveExercise(i, 'down')"
+              >
+                ▼
+              </button>
+            </div>
+            <div class="flex-1">
+              <p class="font-medium text-sm">{{ exercise.name }}</p>
+              <p class="text-xs text-base-content/60">{{ exercise.muscleGroup }}</p>
+            </div>
+            <button type="button" class="btn btn-ghost btn-xs text-error" (click)="removeExercise(i)">
+              Remove
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+  <!-- Submit -->
+  <button
+    type="submit"
+    class="btn btn-primary btn-sm self-end"
+    [disabled]="routineForm.invalid || selectedExercises().length === 0"
+  >
+    Save
+  </button>
+
+</form>
+
+<!-- Exercise picker modal -->
+<app-list-exercises (exercisesSelected)="onExercisesSelected($event)" />
