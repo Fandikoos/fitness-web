@@ -1,8 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CreateRoutineStateService } from '../../../../core/services/create-routine-state.service';
 import { CreateHeaderComponent } from '../create-header.component';
 import { SelectExercisesComponent } from '../../../exercise/select-exercises/select-exercises.component';
+import { ProgramResponse } from '../../../../shared/interfaces/program.interface';
+import { RoutineService } from '../../../../core/services/routine.service';
+import { RoutineResponse } from '../../../../shared/interfaces/routine.interface';
 
 @Component({
   selector: 'app-step-2-routine',
@@ -14,16 +17,20 @@ import { SelectExercisesComponent } from '../../../exercise/select-exercises/sel
 export class Step2RoutineComponent implements OnInit {
   private router = inject(Router);
   private createRoutineState = inject(CreateRoutineStateService);
+  private routineService = inject(RoutineService);
 
   programId = this.createRoutineState.programId;
+  routines = signal<RoutineResponse[]>([]);
   dayOfWeeks = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   ngOnInit(): void {
-    // TODO SE DESCOMENTARÁ
-    // Se comenta por ahora para que eld esarrollo sea mas facil
-    // if (this.programId() === null) {
-    //   this.router.navigate(['/create/step-1']);
-    // }
+    const id = this.programId();
+    if (id === null) {
+      this.router.navigate(['/create/step-1']);
+      return;
+    }
+
+    this.loadPossibleRoutinesById(id);
   }
 
   onBack(): void {
@@ -33,4 +40,17 @@ export class Step2RoutineComponent implements OnInit {
   onSave(): void {
     // TODO: save routine exercises
   }
+
+  private loadPossibleRoutinesById(programId: number): void {
+    this.routineService.getByProgramId(programId).subscribe({
+      next: (response) => {
+        console.log('Fetched routines by program ID:', response);
+        this.routines.set(response);
+      },
+      error: (error) => {
+        console.error('Error fetching routines by program ID:', error);
+      }
+    });
+  }
 }
+

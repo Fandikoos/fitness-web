@@ -99,7 +99,7 @@
     class="btn btn-primary btn-sm self-end"
     [disabled]="routineForm.invalid || selectedExercises().length === 0"
   >
-    Save
+    {{ isEditing() ? 'Update' : 'Save' }}
   </button>
 
 </form>

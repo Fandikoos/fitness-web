@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject, input, OnInit, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, input, OnInit, signal, viewChild } from '@angular/core';
 import { ListExercisesComponent } from '../list-exercises/list-exercises.component';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ExerciseTemplateRequest, ExerciseTemplateResponse } from '../../../shared/interfaces/exercise-template.interface';
-import { RoutineExerciseRequest, RoutineRequest } from '../../../shared/interfaces/routine.interface';
+import { ExerciseTemplateResponse } from '../../../shared/interfaces/exercise-template.interface';
+import { RoutineExerciseRequest, RoutineRequest, RoutineResponse } from '../../../shared/interfaces/routine.interface';
 import { RoutineService } from '../../../core/services/routine.service';
 
 @Component({
@@ -22,6 +22,7 @@ export class SelectExercisesComponent implements OnInit {
 
   dayOfWeek = input.required<string>();
   programId = input.required<number>();
+  routines = input.required<RoutineResponse[]>();
 
   routineForm = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(3)]],
@@ -30,8 +31,19 @@ export class SelectExercisesComponent implements OnInit {
   });
 
   selectedExercises = signal<ExerciseTemplateResponse[]>([]);
+  private existingRoutineId = signal<number | null>(null);
+  private prefilled = false;
 
   private listExercises = viewChild.required(ListExercisesComponent);
+
+  constructor() {
+    effect(() => {
+      const routines = this.routines();
+      if (routines.length > 0 && !this.prefilled) {
+        this.prefillFromExistingRoutine();
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.routineForm.controls.day.setValue(this.dayOfWeek());
@@ -42,7 +54,6 @@ export class SelectExercisesComponent implements OnInit {
   }
 
   onExercisesSelected(exercises: ExerciseTemplateResponse[]): void {
-    // Array con los posibles elementos antiguos + los nuevos elementos seleccionados
     this.selectedExercises.update(current => [...current, ...exercises]);
   }
 
@@ -59,21 +70,22 @@ export class SelectExercisesComponent implements OnInit {
     });
   }
 
+  isEditing(): boolean {
+    return this.existingRoutineId() !== null;
+  }
+
   onSubmit(): void {
     if (this.routineForm.invalid) {
       this.routineForm.markAllAsTouched();
       return;
     }
 
-    const exercises: RoutineExerciseRequest[] = [];
-    for (let i = 0; i < this.selectedExercises().length; i++) {
-      exercises.push({
-        exerciseTemplateId: this.selectedExercises()[i].id,
-        order: i + 1,
-        notes: '',
-        sets: [],
-      });
-    }
+    const exercises: RoutineExerciseRequest[] = this.selectedExercises().map((exercise, i) => ({
+      exerciseTemplateId: exercise.id,
+      orderInRoutine: i + 1,
+      notes: '',
+      sets: [],
+    }));
 
     const routine: RoutineRequest = {
       name: this.routineForm.controls.name.value,
@@ -82,15 +94,42 @@ export class SelectExercisesComponent implements OnInit {
       programId: this.programId(),
       exercises,
     };
-    this.routineService.create(routine).subscribe({
+
+    const routineId = this.existingRoutineId();
+
+    const request$ = routineId !== null
+      ? this.routineService.update(routineId, routine)
+      : this.routineService.create(routine);
+
+    request$.subscribe({
       next: (response) => {
-        console.log('Routine created successfully:', response);
-        window.alert('Routine created successfully!');
+        const action = routineId !== null ? 'updated' : 'created';
+        console.log(`Routine ${action} successfully:`, response);
+        window.alert(`Routine ${action} successfully!`);
+        this.existingRoutineId.set(response.id);
       },
       error: (error) => {
-        console.error('Error creating routine:', error);
-        window.alert('Failed to create routine. Please try again later.');
+        console.error('Error saving routine:', error);
+        window.alert('Failed to save routine. Please try again later.');
       },
     });
+  }
+
+  private prefillFromExistingRoutine(): void {
+    const existing = this.routines().find(
+      r => r.dayOfWeek.toUpperCase() === this.dayOfWeek().toUpperCase()
+    );
+
+    if (!existing) return;
+
+    this.prefilled = true;
+    this.existingRoutineId.set(existing.id);
+    this.routineForm.patchValue({
+      name: existing.name,
+      description: existing.description,
+    });
+    this.selectedExercises.set(
+      existing.exercises.map(e => e.exerciseTemplate)
+    );
   }
 }
