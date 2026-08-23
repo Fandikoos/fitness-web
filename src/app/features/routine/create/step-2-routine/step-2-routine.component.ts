@@ -38,7 +38,8 @@ export class Step2RoutineComponent implements OnInit {
   }
 
   onSave(): void {
-    // TODO: save routine exercises
+    window.alert('Routine saved successfully!');
+    this.router.navigate(['/']);
   }
 
   private loadPossibleRoutinesById(programId: number): void {

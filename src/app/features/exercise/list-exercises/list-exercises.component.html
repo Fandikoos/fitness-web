@@ -1,51 +1,69 @@
 <dialog #exerciseDialog class="modal">
-  <div class="modal-box max-w-2xl">
+  <div class="modal-box max-w-5xl w-11/12 h-[80vh] flex flex-col">
 
     <h3 class="text-lg font-bold">Select exercises</h3>
     <p class="text-base-content/60 text-sm mt-1">
-      Pick the exercises for this day
+      Browse by muscle group and pick exercises for this day
     </p>
 
-    <!-- Loading -->
-    @if (loading()) {
-      <div class="flex justify-center py-8">
-        <span class="loading loading-spinner loading-lg"></span>
-      </div>
-    }
-
-    <!-- Error -->
-    @if (error()) {
-      <div class="alert alert-error mt-4">
-        <span>{{ error() }}</span>
-      </div>
-    }
-
-    <!-- Exercise list -->
-    @if (!loading() && !error()) {
-      <div class="mt-4 max-h-80 overflow-y-auto">
-        @for (exercise of exercises(); track exercise.id) {
-          <div
-            class="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-base-200 transition-colors"
-            [class]="isSelected(exercise.id) ? 'bg-primary/10' : ''"
-            (click)="toggleExercise(exercise.id)"
+    <!-- Muscle group tabs -->
+    <div class="mt-4 overflow-x-auto tabs-scroll">
+      <div role="tablist" class="tabs tabs-bordered flex-nowrap min-w-max">
+        @for (group of muscleGroups; track group.value) {
+          <button
+            role="tab"
+            class="tab tab-sm whitespace-nowrap"
+            [class.tab-active]="activeMuscleGroup() === group.value"
+            (click)="selectMuscleGroup(group.value)"
           >
-            <input
-              type="checkbox"
-              class="checkbox checkbox-primary"
-              [checked]="isSelected(exercise.id)"
-              (click)="$event.stopPropagation()"
-              (change)="toggleExercise(exercise.id)"
-            />
-            <div class="flex-1">
-              <p class="font-medium">{{ exercise.name }}</p>
-              <p class="text-sm text-base-content/60">{{ exercise.muscleGroup }}</p>
-            </div>
-          </div>
-        } @empty {
-          <p class="text-center text-base-content/60 py-6">No exercises found</p>
+            {{ group.label }}
+          </button>
         }
       </div>
-    }
+    </div>
+
+    <!-- Exercise list -->
+    <div class="flex-1 overflow-y-auto mt-4">
+      @if (loading()) {
+        <div class="flex justify-center py-12">
+          <span class="loading loading-spinner loading-lg"></span>
+        </div>
+      } @else if (error()) {
+        <div class="alert alert-error">
+          <span>{{ error() }}</span>
+        </div>
+      } @else {
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          @for (exercise of exercises(); track exercise.id) {
+            <div
+              class="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors border border-base-300 hover:bg-base-200"
+              [class]="isSelected(exercise.id) ? 'bg-primary/10 border-primary/30' : ''"
+              (click)="toggleExercise(exercise)"
+            >
+              <input
+                type="checkbox"
+                class="checkbox checkbox-primary checkbox-sm"
+                [checked]="isSelected(exercise.id)"
+                (click)="$event.stopPropagation()"
+                (change)="toggleExercise(exercise)"
+              />
+              <p class="font-medium text-sm truncate">{{ exercise.name }}</p>
+            </div>
+          } @empty {
+            <div class="col-span-full text-center text-base-content/60 py-12">
+              No exercises found for this muscle group
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Pagination -->
+    <app-pagination
+      [currentPage]="currentPage()"
+      [totalPages]="totalPages()"
+      (pageChange)="goToPage($event)"
+    />
 
     <!-- Actions -->
     <div class="modal-action">
@@ -53,16 +71,15 @@
       <button
         type="button"
         class="btn btn-primary"
-        [disabled]="selection().size === 0"
+        [disabled]="selectionCount() === 0"
         (click)="confirm()"
       >
-        Add {{ selection().size }} exercise{{ selection().size !== 1 ? 's' : '' }}
+        Add {{ selectionCount() }} exercise{{ selectionCount() !== 1 ? 's' : '' }}
       </button>
     </div>
 
   </div>
 
-  <!-- Click outside to close -->
   <form method="dialog" class="modal-backdrop">
     <button>close</button>
   </form>

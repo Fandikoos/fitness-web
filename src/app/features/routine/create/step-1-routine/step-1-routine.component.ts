@@ -18,12 +18,32 @@ export class Step1RoutineComponent {
   private router = inject(Router);
   private programService = inject(ProgramService);
   private createRoutineState = inject(CreateRoutineStateService);
+  programId = this.createRoutineState.programId;
 
   form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(3)]],
     description: [''],
     isActive: [false],
   });
+
+  ngOnInit(): void {
+    const idProgram = this.programId();
+    if (idProgram !== null) {
+      this.programService.get(idProgram).subscribe({
+        next: (program) => {
+          this.form.patchValue({
+            name: program.name,
+            description: program.description,
+            isActive: program.active,
+          });
+        },
+        error: (error) => {
+          console.error('Error fetching program:', error);
+          window.alert('Failed to fetch program details. Please try again later.');
+        }
+      });
+    }
+  }
 
   onNext(): void {
     if (this.form.invalid) {
@@ -37,15 +57,30 @@ export class Step1RoutineComponent {
       active: this.form.get('isActive')?.value || false,
     };
 
-    this.programService.createProgram(programRequest).subscribe({
-      next: (response) => {
-        this.createRoutineState.programId.set(response.id);
-        this.router.navigate(['/create/step-2']);
-      },
-      error: (error) => {
-        console.error('Error creating program:', error);
-        window.alert('Failed to create program. Please try again later.');
-      },
-    });
+    const idProgram = this.programId();
+
+    if (idProgram == null) {
+      this.programService.createProgram(programRequest).subscribe({
+        next: (response) => {
+          this.createRoutineState.programId.set(response.id);
+          this.router.navigate(['/create/step-2']);
+        },
+        error: (error) => {
+          console.error('Error creating program:', error);
+          window.alert('Failed to create program. Please try again later.');
+        },
+      });
+    } else {
+      this.programService.updateProgram(idProgram, programRequest).subscribe({
+        next: (response) => {
+          this.router.navigate(['/create/step-2']);
+        },
+        error: (error) => {
+          console.error('Error updating program:', error);
+          window.alert('Failed to update program. Please try again later.');
+        },
+      });
+    }
+
   }
 }

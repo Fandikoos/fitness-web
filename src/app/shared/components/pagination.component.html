@@ -1,0 +1,21 @@
+@if (totalPages() > 1) {
+  <div class="flex justify-center items-center gap-2 py-3">
+    <button
+      class="btn btn-sm btn-ghost"
+      [disabled]="isFirst()"
+      (click)="previous()"
+    >
+      «
+    </button>
+    <span class="text-sm text-base-content/70">
+      {{ currentPage() + 1 }} / {{ totalPages() }}
+    </span>
+    <button
+      class="btn btn-sm btn-ghost"
+      [disabled]="isLast()"
+      (click)="next()"
+    >
+      »
+    </button>
+  </div>
+}

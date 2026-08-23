@@ -29,5 +29,20 @@ export class ListRoutineComponent {
     this.createRoutineState.programId.set(idProgram);
     this.router.navigate(['/create/step-2']);
   }
+
+  prepareDeleteProgram(idProgram: number, nameProgram: string) {
+    window.alert(`Are you sure you want to delete this program ${nameProgram}?`);
+
+    this.programService.deleteProgram(idProgram).subscribe({
+      next: () => {
+        // Recarga automaticamente el resource después de eliminar el programa
+        this.programs.reload();
+      },
+      error: (error) => {
+        console.error('Error deleting program:', error);
+        window.alert('Failed to delete program. Please try again later.');
+      }
+    });
+  }
 }
 
