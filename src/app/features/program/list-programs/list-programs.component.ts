@@ -3,6 +3,7 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { ProgramService } from '../../../core/services/program.service';
 import { CreateRoutineStateService } from '../../../core/services/create-routine-state.service';
+import { httpResource } from '@angular/common/http';
 
 @Component({
   selector: 'app-list-routine',
@@ -20,6 +21,11 @@ export class ListRoutineComponent {
   programs = rxResource({
     loader: () => this.programService.getAll(),
   });
+
+  startNewProgram(): void {
+    this.createRoutineState.reset();
+    this.router.navigate(['/create/step-1']);
+  }
 
   editProgram(idProgram: number) {
     if (idProgram == null) {

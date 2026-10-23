@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, output, signal, viewChild } from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { ExerciseService } from '../../../core/services/exercise.service';
 import { ExerciseTemplateResponse } from '../../../shared/interfaces/exercise-template.interface';
 import { PaginationComponent } from '../../../shared/components/pagination.component';
@@ -35,27 +36,38 @@ export class ListExercisesComponent {
   private exerciseService = inject(ExerciseService);
 
   exercisesSelected = output<ExerciseTemplateResponse[]>();
+  srcImageUrl = signal<string>('');
 
   readonly muscleGroups = MUSCLE_GROUPS;
   activeMuscleGroup = signal<string>('CHEST');
-  exercises = signal<ExerciseTemplateResponse[]>([]);
   selectedExercises = signal<Map<number, ExerciseTemplateResponse>>(new Map());
-  loading = signal(false);
-  error = signal<string | null>(null);
 
   currentPage = signal(0);
-  totalPages = signal(0);
-  totalElements = signal(0);
   readonly selectionCount = computed(() => this.selectedExercises().size);
 
   private readonly pageSize = 8;
   private dialogRef = viewChild.required<ElementRef<HTMLDialogElement>>('exerciseDialog');
 
+  // --- AFTER (rxResource) ---
+  exercisesResource = rxResource({
+    request: () => ({
+      muscleGroup: this.activeMuscleGroup(),
+      page: this.currentPage(),
+    }),
+    loader: ({ request }) =>
+      this.exerciseService.getByMuscleGroup(request.page, this.pageSize, request.muscleGroup),
+  });
+
+  exercises = computed(() => this.exercisesResource.value()?.content ?? []);
+  totalPages = computed(() => this.exercisesResource.value()?.totalPages ?? 0);
+  totalElements = computed(() => this.exercisesResource.value()?.totalElements ?? 0);
+  // In the template: loading() -> exercisesResource.isLoading(), error() -> exercisesResource.error()
+
   open(): void {
     this.selectedExercises.set(new Map());
     this.activeMuscleGroup.set('CHEST');
     this.currentPage.set(0);
-    this.loadExercises();
+    // BEFORE: this.loadExercises(); — now rxResource reacts automatically to signal changes
     this.dialogRef().nativeElement.showModal();
   }
 
@@ -67,7 +79,7 @@ export class ListExercisesComponent {
     if (this.activeMuscleGroup() === group) return;
     this.activeMuscleGroup.set(group);
     this.currentPage.set(0);
-    this.loadExercises();
+    // BEFORE: this.loadExercises(); — no longer needed
   }
 
   toggleExercise(exercise: ExerciseTemplateResponse): void {
@@ -80,6 +92,8 @@ export class ListExercisesComponent {
       }
       return next;
     });
+    
+    this.srcImageUrl.update(current =>current === exercise.imageUrl ? '' : exercise.imageUrl ?? '');
   }
 
   isSelected(id: number): boolean {
@@ -88,7 +102,6 @@ export class ListExercisesComponent {
 
   goToPage(page: number): void {
     this.currentPage.set(page);
-    this.loadExercises();
   }
 
   confirm(): void {
@@ -97,24 +110,31 @@ export class ListExercisesComponent {
     this.close();
   }
 
-  private loadExercises(): void {
-    this.loading.set(true);
-    this.error.set(null);
-    this.exerciseService.getByMuscleGroup(
-      this.currentPage(),
-      this.pageSize,
-      this.activeMuscleGroup()
-    ).subscribe({
-      next: (data) => {
-        this.exercises.set(data.content);
-        this.totalPages.set(data.totalPages);
-        this.totalElements.set(data.totalElements);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set('Failed to load exercises');
-        this.loading.set(false);
-      },
-    });
-  }
+    // --- BEFORE (manual signals + subscribe) ---
+  // exercises = signal<ExerciseTemplateResponse[]>([]);
+  // loading = signal(false);
+  // error = signal<string | null>(null);
+  // totalPages = signal(0);
+  // totalElements = signal(0);
+  //
+  // private loadExercises(): void {
+  //   this.loading.set(true);
+  //   this.error.set(null);
+  //   this.exerciseService.getByMuscleGroup(
+  //     this.currentPage(),
+  //     this.pageSize,
+  //     this.activeMuscleGroup()
+  //   ).subscribe({
+  //     next: (data) => {
+  //       this.exercises.set(data.content);
+  //       this.totalPages.set(data.totalPages);
+  //       this.totalElements.set(data.totalElements);
+  //       this.loading.set(false);
+  //     },
+  //     error: () => {
+  //       this.error.set('Failed to load exercises');
+  //       this.loading.set(false);
+  //     },
+  //   });
+  // }
 }

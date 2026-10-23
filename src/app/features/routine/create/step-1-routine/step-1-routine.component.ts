@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ProgramRequest } from '../../../../shared/interfaces/program.interface';
@@ -13,12 +13,12 @@ import { CreateHeaderComponent } from '../create-header.component';
   styleUrl: './step-1-routine.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Step1RoutineComponent {
+export class Step1RoutineComponent implements OnInit {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private programService = inject(ProgramService);
   private createRoutineState = inject(CreateRoutineStateService);
-  programId = this.createRoutineState.programId;
+  programId = signal<number | null>(null);
 
   form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(3)]],
@@ -27,7 +27,9 @@ export class Step1RoutineComponent {
   });
 
   ngOnInit(): void {
-    const idProgram = this.programId();
+    const idProgram = this.createRoutineState.programId();
+    this.programId.set(idProgram);
+
     if (idProgram !== null) {
       this.programService.get(idProgram).subscribe({
         next: (program) => {
@@ -43,6 +45,11 @@ export class Step1RoutineComponent {
         }
       });
     }
+  }
+
+  onCancel(): void {
+    this.createRoutineState.reset();
+    this.router.navigate(['/']);
   }
 
   onNext(): void {

@@ -37,8 +37,14 @@ export class Step2RoutineComponent implements OnInit {
     this.router.navigate(['/create/step-1']);
   }
 
+  onCancel(): void {
+    this.createRoutineState.reset();
+    this.router.navigate(['/']);
+  }
+
   onSave(): void {
     window.alert('Routine saved successfully!');
+    this.createRoutineState.reset();
     this.router.navigate(['/']);
   }
 

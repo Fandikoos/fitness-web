@@ -6,6 +6,15 @@
       Browse by muscle group and pick exercises for this day
     </p>
 
+    @if (srcImageUrl()) {
+      <img
+        [src]="srcImageUrl()"
+        (error)="srcImageUrl.set('')"
+        class="w-32 mx-auto mt-4"
+        alt="Exercise selected"
+      />
+    }
+
     <!-- Muscle group tabs -->
     <div class="mt-4 overflow-x-auto tabs-scroll">
       <div role="tablist" class="tabs tabs-bordered flex-nowrap min-w-max">
@@ -24,13 +33,13 @@
 
     <!-- Exercise list -->
     <div class="flex-1 overflow-y-auto mt-4">
-      @if (loading()) {
+      @if (exercisesResource.isLoading()) {
         <div class="flex justify-center py-12">
           <span class="loading loading-spinner loading-lg"></span>
         </div>
-      } @else if (error()) {
+      } @else if (exercisesResource.error()) {
         <div class="alert alert-error">
-          <span>{{ error() }}</span>
+          <span>Failed to load exercises</span>
         </div>
       } @else {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
