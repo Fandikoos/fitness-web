@@ -6,6 +6,7 @@ import { SelectExercisesComponent } from '../../../exercise/select-exercises/sel
 import { ProgramResponse } from '../../../../shared/interfaces/program.interface';
 import { RoutineService } from '../../../../core/services/routine.service';
 import { RoutineResponse } from '../../../../shared/interfaces/routine.interface';
+import { ProgramService } from '../../../../core/services/program.service';
 
 @Component({
   selector: 'app-step-2-routine',
@@ -18,6 +19,7 @@ export class Step2RoutineComponent implements OnInit {
   private router = inject(Router);
   private createRoutineState = inject(CreateRoutineStateService);
   private routineService = inject(RoutineService);
+  private programService = inject(ProgramService);
 
   programId = this.createRoutineState.programId;
   routines = signal<RoutineResponse[]>([]);
@@ -42,8 +44,8 @@ export class Step2RoutineComponent implements OnInit {
     this.router.navigate(['/']);
   }
 
-  onSave(): void {
-    window.alert('Routine saved successfully!');
+  onFinalize(): void {
+    window.alert('Routine finalized successfully!');
     this.createRoutineState.reset();
     this.router.navigate(['/']);
   }

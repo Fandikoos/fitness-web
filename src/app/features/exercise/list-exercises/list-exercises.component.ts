@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, outpu
 import { rxResource } from '@angular/core/rxjs-interop';
 import { ExerciseService } from '../../../core/services/exercise.service';
 import { ExerciseTemplateResponse } from '../../../shared/interfaces/exercise-template.interface';
-import { PaginationComponent } from '../../../shared/components/pagination.component';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 
 interface MuscleGroupTab {
   label: string;

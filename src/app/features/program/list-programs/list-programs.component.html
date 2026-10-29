@@ -128,7 +128,7 @@
                 <button
                   class="btn btn-ghost btn-sm btn-square text-error tooltip"
                   data-tip="Delete"
-                  (click)="prepareDeleteProgram(program.id, program.name)"
+                  (click)="prepareDeleteProgram(program)"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -152,4 +152,19 @@
       </div>
     }
   </div>
+
+  <app-confirm-dialog
+    #deleteDialog
+    title="Delete program?"
+    [message]="deleteMessage()"
+    [canDelete]="true"
+    confirmLabel="Delete program"
+    (confirmed)="deleteProgram()"
+  />
+
+  <app-confirm-dialog
+    #errorDialog
+    title="Something went wrong"
+    message="The program could not be deleted. Please try again later."
+  />
 </div>
