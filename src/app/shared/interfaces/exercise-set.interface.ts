@@ -1,14 +1,14 @@
 export interface ExerciseSetResponse {
-    id: number;
-    setNumber: number;
+    id?: number;
+    numberSet: number;
     weightKg: number;
     reps: number;
-    rpe: number;
+    rpe: number | null;
 }
 
 export interface ExerciseSetRequest {
-    setNumber: number;
+    numberSet: number;
     weightKg: number;
     reps: number;
-    rpe: number;
+    rpe: number | null;
 }

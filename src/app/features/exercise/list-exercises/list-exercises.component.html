@@ -1,95 +1,279 @@
 <dialog #exerciseDialog class="modal">
-  <div class="modal-box max-w-5xl w-11/12 h-[80vh] flex flex-col">
-
-    <h3 class="text-lg font-bold">Select exercises</h3>
-    <p class="text-base-content/60 text-sm mt-1">
-      Browse by muscle group and pick exercises for this day
-    </p>
-
-    @if (srcImageUrl()) {
-      <img
-        [src]="srcImageUrl()"
-        (error)="srcImageUrl.set('')"
-        class="w-32 mx-auto mt-4"
-        alt="Exercise selected"
-      />
-    }
-
-    <!-- Muscle group tabs -->
-    <div class="mt-4 overflow-x-auto tabs-scroll">
-      <div role="tablist" class="tabs tabs-bordered flex-nowrap min-w-max">
-        @for (group of muscleGroups; track group.value) {
-          <button
-            role="tab"
-            class="tab tab-sm whitespace-nowrap"
-            [class.tab-active]="activeMuscleGroup() === group.value"
-            (click)="selectMuscleGroup(group.value)"
-          >
-            {{ group.label }}
-          </button>
-        }
-      </div>
+  <div class="modal-box max-w-6xl w-11/12 h-[85vh] flex flex-col">
+    <!-- Wrapper keeps the <p> from being a flex item, so the ".card-body p { flex-grow: 1 }" rule has no effect -->
+    <div class="shrink-0">
+      <h3 class="text-lg font-bold">Select exercises</h3>
+      <p class="text-base-content/60 text-sm mt-1">
+        Pick exercises on the left, then add notes and sets on the right
+      </p>
     </div>
 
-    <!-- Exercise list -->
-    <div class="flex-1 overflow-y-auto mt-4">
-      @if (exercisesResource.isLoading()) {
-        <div class="flex justify-center py-12">
-          <span class="loading loading-spinner loading-lg"></span>
+    <div
+      class="flex-1 min-h-0 mt-4 flex flex-col lg:flex-row gap-6 overflow-y-auto lg:overflow-hidden"
+    >
+      <!-- Exercise catalog -->
+      <section class="lg:w-1/2 min-h-0 flex flex-col">
+        <!-- Muscle group tabs -->
+        <div class="overflow-x-auto tabs-scroll shrink-0">
+          <div role="tablist" class="tabs tabs-border flex-nowrap min-w-max">
+            @for (group of muscleGroups; track group.value) {
+              <button
+                type="button"
+                role="tab"
+                class="tab tab-sm whitespace-nowrap"
+                [class.tab-active]="activeMuscleGroup() === group.value"
+                (click)="selectMuscleGroup(group.value)"
+              >
+                {{ group.label }}
+              </button>
+            }
+          </div>
         </div>
-      } @else if (exercisesResource.error()) {
-        <div class="alert alert-error">
-          <span>Failed to load exercises</span>
-        </div>
-      } @else {
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          @for (exercise of exercises(); track exercise.id) {
-            <div
-              class="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors border border-base-300 hover:bg-base-200"
-              [class]="isSelected(exercise.id) ? 'bg-primary/10 border-primary/30' : ''"
-              (click)="toggleExercise(exercise)"
-            >
-              <input
-                type="checkbox"
-                class="checkbox checkbox-primary checkbox-sm"
-                [checked]="isSelected(exercise.id)"
-                (click)="$event.stopPropagation()"
-                (change)="toggleExercise(exercise)"
-              />
-              <p class="font-medium text-sm truncate">{{ exercise.name }}</p>
+
+        <!-- Exercise list -->
+        <div class="flex-1 min-h-0 overflow-y-auto mt-4">
+          @if (exercisesResource.isLoading()) {
+            <div class="flex justify-center py-12">
+              <span class="loading loading-spinner loading-lg"></span>
             </div>
-          } @empty {
-            <div class="col-span-full text-center text-base-content/60 py-12">
-              No exercises found for this muscle group
+          } @else if (exercisesResource.error()) {
+            <div class="alert alert-error">
+              <span>Failed to load exercises</span>
+            </div>
+          } @else {
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-2">
+              @for (exercise of exercises(); track exercise.id) {
+                <div
+                  class="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors border border-base-300 hover:bg-base-200"
+                  [class]="
+                    isSelected(exercise.id)
+                      ? 'bg-primary/10 border-primary/30'
+                      : ''
+                  "
+                  (click)="toggleExercise(exercise)"
+                >
+                  <input
+                    type="checkbox"
+                    class="checkbox checkbox-primary checkbox-sm"
+                    [checked]="isSelected(exercise.id)"
+                    (click)="$event.stopPropagation()"
+                    (change)="toggleExercise(exercise)"
+                  />
+                  <p class="font-medium text-sm truncate" [title]="exercise.name">
+                    {{ exercise.name }}
+                  </p>
+                </div>
+              } @empty {
+                <div
+                  class="col-span-full text-center text-base-content/60 py-12"
+                >
+                  No exercises found for this muscle group
+                </div>
+              }
             </div>
           }
         </div>
-      }
+
+        <!-- Pagination -->
+        <app-pagination
+          [currentPage]="currentPage()"
+          [totalPages]="totalPages()"
+          (pageChange)="goToPage($event)"
+        />
+      </section>
+
+      <!-- Selected exercises: image, notes and sets -->
+      <aside
+        class="lg:w-1/2 min-h-0 flex flex-col border-t lg:border-t-0 lg:border-l border-base-300 pt-4 lg:pt-0 lg:pl-6"
+      >
+        <div class="flex items-center gap-2 shrink-0">
+          <h4 class="font-semibold text-sm">Your selection</h4>
+          <span class="badge badge-primary badge-sm">{{
+            selectionCount()
+          }}</span>
+        </div>
+
+        <div class="flex-1 min-h-0 overflow-y-auto mt-3 space-y-3 lg:pr-1">
+          @for (draft of selection(); track draft.exerciseTemplate.id) {
+            <article class="rounded-box border border-base-300 bg-base-100 p-3">
+              <div class="flex items-center gap-3">
+                @if (
+                  draft.exerciseTemplate.imageUrl &&
+                  !hasBrokenImage(draft.exerciseTemplate.id)
+                ) {
+                  <img
+                    [src]="draft.exerciseTemplate.imageUrl"
+                    (error)="markImageAsBroken(draft.exerciseTemplate.id)"
+                    class="size-20 shrink-0 rounded-lg object-contain bg-base-200"
+                    [alt]="draft.exerciseTemplate.name"
+                  />
+                } @else {
+                  <div
+                    class="size-20 shrink-0 rounded-lg bg-base-200 flex items-center justify-center text-xl font-semibold text-base-content/40"
+                  >
+                    {{ draft.exerciseTemplate.name.charAt(0) }}
+                  </div>
+                }
+
+                <div class="flex-1 min-w-0">
+                  <p
+                    class="font-medium text-sm truncate"
+                    [title]="draft.exerciseTemplate.name"
+                  >
+                    {{ draft.exerciseTemplate.name }}
+                  </p>
+                  <p class="text-xs text-base-content/60">
+                    {{ draft.exerciseTemplate.muscleGroup }}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-xs btn-square self-start"
+                  [attr.aria-label]="'Remove ' + draft.exerciseTemplate.name"
+                  (click)="toggleExercise(draft.exerciseTemplate)"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <textarea
+                class="textarea textarea-sm w-full resize-none mt-3"
+                rows="2"
+                maxlength="255"
+                placeholder="Notes (optional), e.g. close grip, slow descent..."
+                [attr.aria-label]="'Notes for ' + draft.exerciseTemplate.name"
+                [ngModel]="draft.notes"
+                (ngModelChange)="
+                  updateNotes(draft.exerciseTemplate.id, $event)
+                "
+              ></textarea>
+
+              @if (draft.sets.length > 0) {
+                <table class="table table-xs mt-2">
+                  <thead>
+                    <tr>
+                      <th class="w-8">Set</th>
+                      <th>Kg</th>
+                      <th>Reps</th>
+                      <th>RPE</th>
+                      <th class="w-8"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (set of draft.sets; track $index; let i = $index) {
+                      <tr>
+                        <td class="font-semibold">{{ i + 1 }}</td>
+                        <td>
+                          <input
+                            type="number"
+                            class="input input-xs w-full"
+                            min="0"
+                            max="999.99"
+                            step="0.5"
+                            placeholder="0"
+                            aria-label="Weight in kg"
+                            [class.input-error]="hasInvalidWeight(set)"
+                            [ngModel]="set.weightKg"
+                            (ngModelChange)="
+                              updateSet(draft.exerciseTemplate.id, i, {
+                                weightKg: $event
+                              })
+                            "
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            class="input input-xs w-full"
+                            min="1"
+                            step="1"
+                            placeholder="10"
+                            aria-label="Repetitions"
+                            [class.input-error]="hasInvalidReps(set)"
+                            [ngModel]="set.reps"
+                            (ngModelChange)="
+                              updateSet(draft.exerciseTemplate.id, i, {
+                                reps: $event
+                              })
+                            "
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            class="input input-xs w-full"
+                            min="1"
+                            max="10"
+                            step="1"
+                            placeholder="-"
+                            aria-label="RPE from 1 to 10, optional"
+                            [class.input-error]="hasInvalidRpe(set)"
+                            [ngModel]="set.rpe"
+                            (ngModelChange)="
+                              updateSet(draft.exerciseTemplate.id, i, {
+                                rpe: $event
+                              })
+                            "
+                          />
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            class="btn btn-ghost btn-xs btn-square"
+                            [attr.aria-label]="'Remove set ' + (i + 1)"
+                            (click)="removeSet(draft.exerciseTemplate.id, i)"
+                          >
+                            ✕
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+
+              <button
+                type="button"
+                class="btn btn-ghost btn-xs text-primary mt-2"
+                (click)="addSet(draft.exerciseTemplate.id)"
+              >
+                + Add set
+              </button>
+            </article>
+          } @empty {
+            <div class="text-center text-base-content/60 text-sm py-12">
+              Select an exercise to add its notes and sets
+            </div>
+          }
+        </div>
+      </aside>
     </div>
 
-    <!-- Pagination -->
-    <app-pagination
-      [currentPage]="currentPage()"
-      [totalPages]="totalPages()"
-      (pageChange)="goToPage($event)"
-    />
-
     <!-- Actions -->
-    <div class="modal-action">
-      <button type="button" class="btn btn-ghost" (click)="close()">Cancel</button>
+    <div class="modal-action items-center">
+      @if (selectionCount() > 0 && !canConfirm()) {
+        <p class="text-error text-xs mr-auto">
+          Every set needs a valid weight and reps. RPE is optional (1-10).
+        </p>
+      }
+      <button type="button" class="btn btn-ghost" (click)="close()">
+        Cancel
+      </button>
       <button
         type="button"
         class="btn btn-primary"
-        [disabled]="selectionCount() === 0"
+        [disabled]="!canConfirm()"
         (click)="confirm()"
       >
-        Add {{ selectionCount() }} exercise{{ selectionCount() !== 1 ? 's' : '' }}
+        Save {{ selectionCount() }} exercise{{
+          selectionCount() !== 1 ? "s" : ""
+        }}
       </button>
     </div>
-
   </div>
 
-  <form method="dialog" class="modal-backdrop">
+  <form method="dialog" class="modal-backdrop" ngNoForm>
     <button>close</button>
   </form>
 </dialog>

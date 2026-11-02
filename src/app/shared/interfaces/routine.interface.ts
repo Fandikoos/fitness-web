@@ -12,7 +12,7 @@ export interface RoutineResponse {
 }
 
 export interface RoutineExerciseResponse {
-    id: number;
+    id?: number;
     exerciseTemplate: ExerciseTemplateResponse;
     orderInRoutine: number;
     notes: string;

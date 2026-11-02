@@ -1,5 +1,8 @@
-<form [formGroup]="routineForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
-
+<form
+  [formGroup]="routineForm"
+  (ngSubmit)="onSubmit()"
+  class="flex flex-col gap-4"
+>
   <!-- Routine name -->
   <fieldset class="fieldset">
     <legend class="fieldset-legend">Routine name *</legend>
@@ -8,13 +11,17 @@
       formControlName="name"
       placeholder="e.g. Chest & Triceps, Leg Day..."
       class="input input-bordered w-full"
-      [class.input-error]="routineForm.controls.name.touched && routineForm.controls.name.invalid"
+      [class.input-error]="
+        routineForm.controls.name.touched && routineForm.controls.name.invalid
+      "
     />
-    @if (routineForm.controls.name.touched && routineForm.controls.name.errors) {
+    @if (
+      routineForm.controls.name.touched && routineForm.controls.name.errors
+    ) {
       <p class="fieldset-label text-error">
-        @if (routineForm.controls.name.errors['required']) {
+        @if (routineForm.controls.name.errors["required"]) {
           Name is required
-        } @else if (routineForm.controls.name.errors['minlength']) {
+        } @else if (routineForm.controls.name.errors["minlength"]) {
           Minimum 3 characters
         }
       </p>
@@ -47,9 +54,15 @@
   <!-- Selected exercises -->
   <div>
     <div class="flex items-center justify-between mb-2">
-      <span class="font-medium text-sm">Exercises ({{ selectedExercises().length }})</span>
-      <button type="button" class="btn btn-outline btn-primary btn-sm" (click)="openExerciseModal()">
-        + Add exercises
+      <span class="font-medium text-sm"
+        >Exercises ({{ selectedExercises().length }})</span
+      >
+      <button
+        type="button"
+        class="btn btn-outline btn-primary btn-sm"
+        (click)="openExerciseModal()"
+      >
+        {{ selectedExercises().length > 0 ? "Edit exercises" : "+ Add exercises" }}
       </button>
     </div>
 
@@ -59,9 +72,15 @@
       </p>
     } @else {
       <ul class="space-y-2">
-        @for (exercise of selectedExercises(); track exercise.id; let i = $index) {
+        @for (
+          exercise of selectedExercises();
+          track exercise.exerciseTemplate.id;
+          let i = $index
+        ) {
           <li class="flex items-center gap-3 bg-base-200 rounded-lg px-3 py-2">
-            <span class="badge badge-neutral badge-sm font-bold">{{ i + 1 }}</span>
+            <span class="badge badge-neutral badge-sm font-bold">{{
+              i + 1
+            }}</span>
             <div class="flex flex-col gap-0.5">
               <button
                 type="button"
@@ -80,11 +99,39 @@
                 ▼
               </button>
             </div>
-            <div class="flex-1">
-              <p class="font-medium text-sm">{{ exercise.name }}</p>
-              <p class="text-xs text-base-content/60">{{ exercise.muscleGroup }}</p>
+            <div class="flex-1 min-w-0">
+              <p class="font-medium text-sm">
+                {{ exercise.exerciseTemplate.name }}
+              </p>
+              <p class="text-xs text-base-content/60">
+                {{ exercise.exerciseTemplate.muscleGroup }}
+              </p>
+              @if (exercise.sets.length > 0) {
+                <div class="flex flex-wrap gap-1 mt-1">
+                  @for (set of exercise.sets; track set.numberSet) {
+                    <span class="badge badge-ghost badge-sm">
+                      {{ set.weightKg }} kg × {{ set.reps }}
+                      @if (set.rpe !== null) {
+                        · RPE {{ set.rpe }}
+                      }
+                    </span>
+                  }
+                </div>
+              }
+              @if (exercise.notes) {
+                <p
+                  class="text-xs italic text-base-content/70 mt-1 truncate"
+                  [title]="exercise.notes"
+                >
+                  {{ exercise.notes }}
+                </p>
+              }
             </div>
-            <button type="button" class="btn btn-ghost btn-xs text-error" (click)="removeExercise(i)">
+            <button
+              type="button"
+              class="btn btn-ghost btn-xs text-error"
+              (click)="removeExercise(i)"
+            >
               Remove
             </button>
           </li>
@@ -99,9 +146,8 @@
     class="btn btn-primary btn-sm self-end"
     [disabled]="routineForm.invalid || selectedExercises().length === 0"
   >
-    {{ isEditing() ? 'Update' : 'Save' }}
+    {{ isEditing() ? "Update" : "Save" }}
   </button>
-
 </form>
 
 <!-- Exercise picker modal -->

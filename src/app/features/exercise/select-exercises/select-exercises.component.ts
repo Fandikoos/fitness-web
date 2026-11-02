@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, effect, inject, input, OnInit, sign
 import { ListExercisesComponent } from '../list-exercises/list-exercises.component';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ExerciseTemplateResponse } from '../../../shared/interfaces/exercise-template.interface';
-import { RoutineExerciseRequest, RoutineRequest, RoutineResponse } from '../../../shared/interfaces/routine.interface';
+import { RoutineExerciseRequest, RoutineExerciseResponse, RoutineRequest, RoutineResponse } from '../../../shared/interfaces/routine.interface';
 import { RoutineService } from '../../../core/services/routine.service';
 
 @Component({
@@ -30,7 +30,7 @@ export class SelectExercisesComponent implements OnInit {
     description: [''],
   });
 
-  selectedExercises = signal<ExerciseTemplateResponse[]>([]);
+  selectedExercises = signal<RoutineExerciseResponse[]>([]);
   private existingRoutineId = signal<number | null>(null);
   private prefilled = false;
 
@@ -50,11 +50,12 @@ export class SelectExercisesComponent implements OnInit {
   }
 
   openExerciseModal(): void {
-    this.listExercises().open();
+    this.listExercises().open(this.selectedExercises());
   }
 
-  onExercisesSelected(exercises: ExerciseTemplateResponse[]): void {
-    this.selectedExercises.update(current => [...current, ...exercises]);
+  // The modal edits the whole list, so its result replaces the current one
+  onExercisesSelected(exercises: RoutineExerciseResponse[]): void {
+    this.selectedExercises.set(exercises);
   }
 
   removeExercise(index: number): void {
@@ -80,40 +81,44 @@ export class SelectExercisesComponent implements OnInit {
       return;
     }
 
-    const exercises: RoutineExerciseRequest[] = this.selectedExercises().map((exercise, i) => ({
-      exerciseTemplateId: exercise.id,
-      orderInRoutine: i + 1,
-      notes: '',
-      sets: [],
-    }));
+    const exercises: RoutineExerciseRequest[] = [];
+    for (let i = 0; i < this.selectedExercises().length; i++) {
+      const exercise = this.selectedExercises()[i];
+      exercises.push({
+        exerciseTemplateId: exercise.exerciseTemplate.id,
+        orderInRoutine: i + 1,
+        notes: exercise.notes,
+        sets: exercise.sets.map(({ numberSet, weightKg, reps, rpe }) => ({ numberSet, weightKg, reps, rpe })),
+      });
+    }
 
     const routine: RoutineRequest = {
-      name: this.routineForm.controls.name.value,
-      dayOfWeek: this.routineForm.controls.day.value.toUpperCase(),
-      description: this.routineForm.controls.description.value,
-      programId: this.programId(),
-      exercises,
-    };
+        name: this.routineForm.controls.name.value,
+        dayOfWeek: this.routineForm.controls.day.value.toUpperCase(),
+        description: this.routineForm.controls.description.value,
+        programId: this.programId(),
+        exercises,
+      };
 
-    const routineId = this.existingRoutineId();
+      const routineId = this.existingRoutineId();
 
-    const request$ = routineId !== null
-      ? this.routineService.update(routineId, routine)
-      : this.routineService.create(routine);
+      const request$ = routineId !== null
+        ? this.routineService.update(routineId, routine)
+        : this.routineService.create(routine);
 
-    request$.subscribe({
-      next: (response) => {
-        const action = routineId !== null ? 'updated' : 'created';
-        console.log(`Routine ${action} successfully:`, response);
-        window.alert(`Routine ${action} successfully!`);
-        this.existingRoutineId.set(response.id);
-      },
-      error: (error) => {
-        console.error('Error saving routine:', error);
-        window.alert('Failed to save routine. Please try again later.');
-      },
-    });
-  }
+      request$.subscribe({
+        next: (response) => {
+          const action = routineId !== null ? 'updated' : 'created';
+          console.log(`Routine ${action} successfully:`, response);
+          window.alert(`Routine ${action} successfully!`);
+          this.existingRoutineId.set(response.id);
+        },
+        error: (error) => {
+          console.error('Error saving routine:', error);
+          window.alert('Failed to save routine. Please try again later.');
+        },
+      });
+    }
 
   private prefillFromExistingRoutine(): void {
     const existing = this.routines().find(
@@ -128,8 +133,9 @@ export class SelectExercisesComponent implements OnInit {
       name: existing.name,
       description: existing.description,
     });
+
     this.selectedExercises.set(
-      existing.exercises.map(e => e.exerciseTemplate)
+      [...existing.exercises].sort((a, b) => a.orderInRoutine - b.orderInRoutine)
     );
   }
 }
