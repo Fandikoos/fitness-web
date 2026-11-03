@@ -1,0 +1,9 @@
+<div class="toast toast-top toast-center z-50">
+  @for (toast of toastService.toasts(); track toast.id) {
+    <div role="alert" class="alert" [class]="alertClass[toast.type]">
+      <span>{{ toast.message }}</span>
+      <button class="btn btn-ghost btn-xs" (click)="toastService.dismiss(toast.id)">✕</button>
+    </div>
+  }
+</div>
+

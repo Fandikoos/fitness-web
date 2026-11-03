@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ExerciseTemplateResponse } from '../../../shared/interfaces/exercise-template.interface';
 import { RoutineExerciseRequest, RoutineExerciseResponse, RoutineRequest, RoutineResponse } from '../../../shared/interfaces/routine.interface';
 import { RoutineService } from '../../../core/services/routine.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-select-exercises',
@@ -19,6 +20,7 @@ export class SelectExercisesComponent implements OnInit {
 
   private fb = inject(FormBuilder);
   private routineService = inject(RoutineService);
+  private toastService = inject(ToastService);
 
   dayOfWeek = input.required<string>();
   programId = input.required<number>();
@@ -110,12 +112,11 @@ export class SelectExercisesComponent implements OnInit {
         next: (response) => {
           const action = routineId !== null ? 'updated' : 'created';
           console.log(`Routine ${action} successfully:`, response);
-          window.alert(`Routine ${action} successfully!`);
+          this.toastService.success(`Routine ${action} successfully!`);
           this.existingRoutineId.set(response.id);
         },
         error: (error) => {
           console.error('Error saving routine:', error);
-          window.alert('Failed to save routine. Please try again later.');
         },
       });
     }

@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ExerciseTemplateResponse } from '../../shared/interfaces/exercise-template.interface';
 import { PageResponse } from '../../shared/interfaces/page-response';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -10,14 +11,14 @@ import { PageResponse } from '../../shared/interfaces/page-response';
 export class ExerciseService {
 
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:8080/api/workout-service/exercise-templates';
+  private url = environment.exerciseTemplatesUrl;
 
   getAll(): Observable<ExerciseTemplateResponse[]> {
-    return this.http.get<ExerciseTemplateResponse[]>(this.baseUrl);
+    return this.http.get<ExerciseTemplateResponse[]>(this.url);
   }
 
   getByMuscleGroup(page: number, size: number, muscleGroup: string): Observable<PageResponse<ExerciseTemplateResponse>> {
-    const url = `${this.baseUrl}/muscle-group/${muscleGroup}`;
+    const url = `${this.url}/muscle-group/${muscleGroup}`;
     return this.http.get<PageResponse<ExerciseTemplateResponse>>(url, {
       params: {
         page: page,
@@ -25,7 +26,5 @@ export class ExerciseService {
       }
     });
   }
-
-
 
 }

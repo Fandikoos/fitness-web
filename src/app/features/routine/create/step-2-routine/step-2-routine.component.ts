@@ -7,6 +7,7 @@ import { ProgramResponse } from '../../../../shared/interfaces/program.interface
 import { RoutineService } from '../../../../core/services/routine.service';
 import { RoutineResponse } from '../../../../shared/interfaces/routine.interface';
 import { ProgramService } from '../../../../core/services/program.service';
+import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-step-2-routine',
@@ -20,6 +21,7 @@ export class Step2RoutineComponent implements OnInit {
   private createRoutineState = inject(CreateRoutineStateService);
   private routineService = inject(RoutineService);
   private programService = inject(ProgramService);
+  private toastService = inject(ToastService);
 
   programId = this.createRoutineState.programId;
   routines = signal<RoutineResponse[]>([]);
@@ -45,7 +47,7 @@ export class Step2RoutineComponent implements OnInit {
   }
 
   onFinalize(): void {
-    window.alert('Routine finalized successfully!');
+    this.toastService.success('Routine finalized successfully!');
     this.createRoutineState.reset();
     this.router.navigate(['/']);
   }

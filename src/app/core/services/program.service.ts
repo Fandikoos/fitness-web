@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { ProgramRequest, ProgramResponse } from '../../shared/interfaces/program.interface';
 import { catchError, delay, Observable, of, shareReplay, tap, throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -9,12 +10,12 @@ import { catchError, delay, Observable, of, shareReplay, tap, throwError } from 
 export class ProgramService {
 
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:8080/api/workout-service/programs';
+  private url = environment.programUrl;
   private cache$: Observable<ProgramResponse[]> | null = null;
 
   getAll(): Observable<ProgramResponse[]> {
     if (!this.cache$) {
-      this.cache$ = this.http.get<ProgramResponse[]>(this.baseUrl).pipe(
+      this.cache$ = this.http.get<ProgramResponse[]>(this.url).pipe(
         catchError((error) => {
           console.error('Error fetching programs:', error);
           this.cache$ = null;
@@ -27,7 +28,7 @@ export class ProgramService {
   }
 
   get(programId: number): Observable<ProgramResponse> {
-    return this.http.get<ProgramResponse>(`${this.baseUrl}/${programId}`).pipe(
+    return this.http.get<ProgramResponse>(`${this.url}/${programId}`).pipe(
       catchError((error) => {
         console.error('Error fetching program:', error);
         return throwError(() => new Error('Failed to fetch program. Please try again later.'));
@@ -36,7 +37,7 @@ export class ProgramService {
   }
 
   createProgram(programRequest: ProgramRequest): Observable<ProgramResponse> {
-    return this.http.post<ProgramResponse>(this.baseUrl, programRequest).pipe(
+    return this.http.post<ProgramResponse>(this.url, programRequest).pipe(
       tap(() => this.invalidateCache()),
       catchError((error) => {
         console.error('Error creating program:', error);
@@ -50,7 +51,7 @@ export class ProgramService {
   }
 
   deleteProgram(programId: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${programId}`).pipe(
+    return this.http.delete<void>(`${this.url}/${programId}`).pipe(
       tap(() => this.invalidateCache()),
       catchError((error) => {
         console.error('Error deleting program:', error);
@@ -60,7 +61,7 @@ export class ProgramService {
   }
 
   updateProgram(programId: number, programRequest: ProgramRequest): Observable<ProgramResponse> {
-    return this.http.put<ProgramResponse>(`${this.baseUrl}/${programId}`, programRequest).pipe(
+    return this.http.put<ProgramResponse>(`${this.url}/${programId}`, programRequest).pipe(
       tap(() => this.invalidateCache()),
       catchError((error) => {
         console.error('Error updating program:', error);
