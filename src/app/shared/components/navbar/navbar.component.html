@@ -1,0 +1,62 @@
+<header class="bg-base-100 border-b border-base-300">
+  <nav class="navbar max-w-5xl mx-auto px-4 min-h-16">
+    <div class="navbar-start gap-6">
+      <!-- Logo -->
+      <a routerLink="/" class="flex items-center gap-3">
+        <span class="bg-primary text-primary-content rounded-lg p-1.5 flex">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="2"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="size-5"
+          >
+            <path d="M2 12h1" />
+            <path d="M6 8H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2" />
+            <path d="M6 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z" />
+            <path d="M9 12h6" />
+            <path d="M15 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-1a1 1 0 0 0-1 1z" />
+            <path d="M18 8h2a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2" />
+            <path d="M22 12h-1" />
+          </svg>
+        </span>
+        <span class="font-bold text-base">Fitness App</span>
+      </a>
+
+      <!-- Links -->
+      <ul class="menu menu-horizontal gap-1 p-0">
+        @for (option of navbarOptions; track option.route) {
+          <li>
+            <a
+              [routerLink]="option.route"
+              routerLinkActive="bg-primary/15 text-primary font-semibold"
+              [routerLinkActiveOptions]="{ exact: option.exact }"
+              class="rounded-lg text-base-content/70"
+            >
+              {{ option.label }}
+            </a>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <div class="navbar-end">
+      <a routerLink="/create/step-1" class="btn btn-primary rounded-lg">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="2"
+          stroke="currentColor"
+          class="size-4"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        New program
+      </a>
+    </div>
+  </nav>
+</header>

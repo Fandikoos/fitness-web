@@ -1,4 +1,4 @@
-import { HTTP_INTERCEPTORS, HttpErrorResponse, HttpInterceptorFn, HttpResponse } from "@angular/common/http";
+import { HttpErrorResponse, HttpInterceptorFn } from "@angular/common/http";
 import { inject } from "@angular/core";
 import { ToastService } from "../services/toast.service";
 import { catchError, throwError } from "rxjs";

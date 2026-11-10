@@ -4,8 +4,8 @@ export default [
         loadComponent: () => import('./dashboard/dashboard-routine.component').then((m) => m.DashboardRoutineComponent),
     },
     {
-        path: 'routines',
-        loadComponent: () => import('../program/list-programs/list-programs.component').then((m) => m.ListRoutineComponent),
+        path: 'programs',
+        loadComponent: () => import('../program/list-programs/list-programs.component').then((m) => m.ListProgramComponent),
     },
     {
         path: 'create/step-1',

@@ -13,7 +13,7 @@ import { ConfirmDialog } from '../../../shared/components/confirm-dialog/confirm
   styleUrls: ['./list-programs.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ListRoutineComponent {
+export class ListProgramComponent {
 
   private programService = inject(ProgramService);
   private router = inject(Router);
