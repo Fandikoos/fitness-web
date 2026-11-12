@@ -1,9 +1,13 @@
 <div class="page-container py-8">
   @if (activeProgramResource.hasValue()) {
-    <app-calendar
-      [programName]="programName()"
-      [routines]="routines()"
-    />
+    <div class="flex flex-col gap-8">
+      <app-calendar
+        [programName]="programName()"
+        [routines]="routines()"
+      />
+
+      <app-summary-workout [routine]="todayRoutine()" />
+    </div>
   } @else if (activeProgramResource.isLoading()) {
     <div class="flex justify-center py-16">
       <span class="loading loading-spinner loading-lg"></span>

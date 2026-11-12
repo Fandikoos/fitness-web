@@ -1,0 +1,135 @@
+@if (routine(); as routine) {
+  <section class="grid gap-6 lg:grid-cols-3 lg:items-start">
+    <!-- Lista de ejercicios -->
+    <div class="flex flex-col gap-4 lg:col-span-2">
+      <h2 class="text-xl font-bold">Ejercicios</h2>
+
+      @for (exercise of exercises(); track exercise.orderInRoutine) {
+        <article
+          class="flex flex-col gap-4 rounded-2xl border border-base-300 bg-base-200 p-4 sm:flex-row sm:items-center"
+        >
+          <div class="flex flex-1 items-center gap-4 min-w-0">
+            <!-- Orden -->
+            <span
+              class="flex size-7 shrink-0 items-center justify-center rounded-full bg-base-300 text-sm font-semibold"
+            >
+              {{ exercise.orderInRoutine }}
+            </span>
+
+            <!-- Imagen o icono por defecto -->
+            <div
+              class="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-base-100 text-base-content/40"
+            >
+              @if (exercise.exerciseTemplate.imageUrl) {
+                <img
+                  [src]="exercise.exerciseTemplate.imageUrl"
+                  [alt]="exercise.exerciseTemplate.name"
+                  class="size-full object-cover"
+                />
+              } @else {
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  class="size-6"
+                  aria-hidden="true"
+                >
+                  <path d="M6 7v10M3 9v6M18 7v10M21 9v6M6 12h12" />
+                </svg>
+              }
+            </div>
+
+            <!-- Nombre, grupo muscular y notas -->
+            <div class="flex min-w-0 flex-col gap-1">
+              <h3 class="font-semibold truncate">
+                {{ exercise.exerciseTemplate.name }}
+              </h3>
+              <div class="flex flex-wrap items-center gap-2">
+                <span
+                  class="badge badge-outline badge-sm uppercase tracking-wide text-base-content/70"
+                >
+                  {{ exercise.exerciseTemplate.muscleGroup | muscleGroupLabel }}
+                </span>
+                @if (exercise.notes) {
+                  <span class="text-xs italic text-base-content/60">{{
+                    exercise.notes
+                  }}</span>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Series -->
+          <div class="flex flex-wrap gap-2 sm:max-w-xs sm:justify-end">
+            @for (set of exercise.sets; track set.numberSet) {
+              <span
+                class="rounded-lg border border-base-300 bg-base-100 px-2.5 py-1 text-sm whitespace-nowrap"
+              >
+                {{ set.weightKg }} kg × {{ set.reps }}
+                @if (set.rpe != null) {
+                  · RPE {{ set.rpe }}
+                }
+              </span>
+            } @empty {
+              <span class="text-sm text-base-content/50">Sin series</span>
+            }
+          </div>
+        </article>
+      } @empty {
+        <p class="text-base-content/60">Esta rutina no tiene ejercicios.</p>
+      }
+    </div>
+
+    <!-- Resumen de la rutina -->
+    <aside class="card border border-base-300 bg-base-200 lg:sticky lg:top-6">
+      <div class="card-body gap-4">
+        <p class="text-xs font-bold uppercase tracking-wider text-primary">
+          {{ routine.dayOfWeek | dayLabel }}
+        </p>
+        <h2 class="card-title text-2xl">{{ routine.name }}</h2>
+        @if (routine.description) {
+          <p class="text-sm text-base-content/70">{{ routine.description }}</p>
+        }
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="rounded-xl bg-base-100 p-3">
+            <p class="text-xs text-base-content/60">Ejercicios</p>
+            <p class="text-xl font-bold">{{ exercises().length }}</p>
+          </div>
+          <div class="rounded-xl bg-base-100 p-3">
+            <p class="text-xs text-base-content/60">Series</p>
+            <p class="text-xl font-bold">{{ totalSets() }}</p>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-lg w-full rounded-xl mt-2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linejoin="round"
+            class="size-5"
+            aria-hidden="true"
+          >
+            <path d="M7 4.5v15l12-7.5z" />
+          </svg>
+          Empezar rutina
+        </button>
+      </div>
+    </aside>
+  </section>
+} @else {
+  <div class="card border border-base-300 bg-base-200">
+    <div class="card-body items-center text-center">
+      <h2 class="card-title">Día de descanso</h2>
+      <p class="text-base-content/60">
+        Hoy no tienes ninguna rutina programada. ¡Recupera fuerzas!
+      </p>
+    </div>
+  </div>
+}

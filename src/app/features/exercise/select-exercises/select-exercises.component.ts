@@ -99,31 +99,31 @@ export class SelectExercisesComponent implements OnInit {
     }
 
     const routine: RoutineRequest = {
-        name: this.routineForm.controls.name.value,
-        dayOfWeek: this.dayOfWeek(),
-        description: this.routineForm.controls.description.value,
-        programId: this.programId(),
-        exercises,
-      };
+      name: this.routineForm.controls.name.value,
+      dayOfWeek: this.dayOfWeek(),
+      description: this.routineForm.controls.description.value,
+      programId: this.programId(),
+      exercises,
+    };
 
-      const routineId = this.existingRoutineId();
+    const routineId = this.existingRoutineId();
 
-      const request$ = routineId !== null
-        ? this.routineService.update(routineId, routine)
-        : this.routineService.create(routine);
+    const request$ = routineId !== null
+      ? this.routineService.update(routineId, routine)
+      : this.routineService.create(routine);
 
-      request$.subscribe({
-        next: (response) => {
-          const action = routineId !== null ? 'actualizada' : 'creada';
-          console.log(`Routine ${action} successfully:`, response);
-          this.toastService.success(`¡Rutina ${action} correctamente!`);
-          this.existingRoutineId.set(response.id);
-        },
-        error: (error) => {
-          console.error('Error saving routine:', error);
-        },
-      });
-    }
+    request$.subscribe({
+      next: (response) => {
+        const action = routineId !== null ? 'actualizada' : 'creada';
+        console.log(`Routine ${action} successfully:`, response);
+        this.toastService.success(`¡Rutina ${action} correctamente!`);
+        this.existingRoutineId.set(response.id);
+      },
+      error: (error) => {
+        console.error('Error saving routine:', error);
+      },
+    });
+  }
 
   private prefillFromExistingRoutine(): void {
     const existing = this.routines().find(
