@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { RoutineResponse } from '../../../shared/interfaces/routine.interface';
 import { DAYS_OF_WEEK, getDayOfWeekIndex } from '../../../shared/utils/days-of-week';
 
@@ -7,6 +7,7 @@ interface CalendarDay {
   date: Date;
   routineName: string;
   isToday: boolean;
+  isSelected: boolean;
 }
 
 @Component({
@@ -20,11 +21,15 @@ export class CalendarComponent {
 
   programName = input.required<string>();
   routines = input<RoutineResponse[]>([]);
+  selectedDate = input.required<Date>();
+
+  selectedDayOfWeek = output<Date>();
 
   readonly todayDate = new Date();
 
   weekDays = computed<CalendarDay[]>(() => {
     const routines = this.routines();
+    const selectedIndex = getDayOfWeekIndex(this.selectedDate());
 
     // Lunes = 0 ... domingo = 6 → también son los días que han pasado desde el lunes
     const daysSinceMonday = getDayOfWeekIndex(this.todayDate);
@@ -42,7 +47,12 @@ export class CalendarComponent {
         date,
         routineName: routine?.name ?? 'Descanso',
         isToday: index === daysSinceMonday,
+        isSelected: index === selectedIndex,
       };
     });
   });
+
+  onDaySelected(daySelected: CalendarDay) {
+    this.selectedDayOfWeek.emit(daySelected.date);
+  }
 }

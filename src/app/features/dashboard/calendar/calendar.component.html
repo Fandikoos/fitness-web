@@ -10,7 +10,9 @@
 
     <div class="flex items-center gap-3">
       <span class="text-sm text-base-content/60">Programa activo</span>
-      <span class="badge badge-success badge-soft badge-lg rounded-full font-semibold">
+      <span
+        class="badge badge-success badge-soft badge-lg rounded-full font-semibold"
+      >
         {{ programName() }}
       </span>
     </div>
@@ -19,22 +21,30 @@
   <!-- Semana -->
   <div class="grid grid-cols-7 gap-2 sm:gap-3">
     @for (day of weekDays(); track day.date.getTime()) {
-      <div
-        class="rounded-xl border py-4 px-1 flex flex-col items-center gap-1 text-center"
+      <!-- Seleccionado: relleno primario · Hoy (sin seleccionar): solo borde primario -->
+      <button
+        type="button"
+        class="rounded-xl border py-4 px-1 flex flex-col items-center gap-1 text-center cursor-pointer transition-colors"
         [class]="
-          day.isToday
+          day.isSelected
             ? 'bg-primary text-primary-content border-primary'
-            : 'bg-base-200 border-base-300'
+            : day.isToday
+              ? 'bg-base-200 border-primary border-2'
+              : 'bg-base-200 border-base-300 hover:border-primary/50'
         "
+        [attr.aria-pressed]="day.isSelected"
+        (click)="onDaySelected(day)"
       >
         <span class="font-bold text-sm">{{ day.date | date: "EEE d" }}</span>
         <span
           class="text-xs truncate max-w-full"
-          [class]="day.isToday ? 'text-primary-content/80' : 'text-base-content/60'"
+          [class]="
+            day.isSelected ? 'text-primary-content/80' : 'text-base-content/60'
+          "
         >
           {{ day.routineName }}
         </span>
-      </div>
+      </button>
     }
   </div>
 </section>

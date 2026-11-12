@@ -1,11 +1,10 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { MUSCLE_GROUPS } from '../utils/muscle-groups';
 import { DAYS_OF_WEEK } from '../utils/days-of-week';
 
-
+// Convierte el enum del backend (p. ej. "THURSDAY") en la etiqueta de la UI (p. ej. "Jueves")
 @Pipe({ name: 'dayLabel' })
-export class dayLabelPipe implements PipeTransform {
+export class DayLabelPipe implements PipeTransform {
   transform(value: string): string {
-    return DAYS_OF_WEEK.find(group => group.value === value?.toUpperCase())?.label ?? value;
+    return DAYS_OF_WEEK.find(day => day.value === value?.toUpperCase())?.label ?? value;
   }
 }

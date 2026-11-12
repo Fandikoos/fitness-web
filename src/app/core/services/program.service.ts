@@ -46,8 +46,8 @@ export class ProgramService {
     );
   }
 
-  findActiveProgram(): Observable<ProgramResponse> {
-    return this.http.get<ProgramResponse>(`${this.url}/active`).pipe(
+  findActiveProgram(): Observable<ProgramResponse | null> {
+    return this.http.get<ProgramResponse | null>(`${this.url}/active`).pipe(
       catchError((error) => {
         console.error('Error fetching active program:', error);
         return throwError(() => new Error('No se ha podido cargar el programa activo. Inténtalo de nuevo más tarde.'));

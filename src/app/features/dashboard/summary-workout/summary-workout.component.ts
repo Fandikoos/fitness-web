@@ -1,14 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { RoutineResponse } from '../../../shared/interfaces/routine.interface';
 import { MuscleGroupLabelPipe } from '../../../shared/pipes/muscle-group-label.pipe';
-import { DAYS_OF_WEEK } from '../../../shared/utils/days-of-week';
-import { dayLabelPipe } from '../../../shared/pipes/day-label.pipe';
+import { DayLabelPipe } from '../../../shared/pipes/day-label.pipe';
 
 @Component({
   selector: 'app-summary-workout',
   imports: [
     MuscleGroupLabelPipe,
-    dayLabelPipe
+    DayLabelPipe
   ],
   templateUrl: './summary-workout.component.html',
   styleUrl: './summary-workout.component.css',

@@ -1,16 +1,49 @@
 <div class="page-container py-8">
-  @if (activeProgramResource.hasValue()) {
+  @if (activeProgramResource.isLoading()) {
+    <!-- Carga -->
+    <div class="flex justify-center py-16">
+      <span class="loading loading-spinner loading-lg"></span>
+    </div>
+  } @else if (activeProgramResource.error()) {
+    <!-- Error: el interceptor ya muestra el toast, aquí damos la opción de reintentar -->
+    <div class="card border border-base-300 bg-base-200">
+      <div class="card-body items-center text-center">
+        <h2 class="card-title">No se ha podido cargar tu programa</h2>
+        <p class="text-base-content/60">
+          Comprueba tu conexión e inténtalo de nuevo.
+        </p>
+        <button
+          type="button"
+          class="btn btn-primary mt-2"
+          (click)="activeProgramResource.reload()"
+        >
+          Reintentar
+        </button>
+      </div>
+    </div>
+  } @else if (activeProgram()) {
+    <!-- Programa activo -->
     <div class="flex flex-col gap-8">
       <app-calendar
         [programName]="programName()"
         [routines]="routines()"
+        [selectedDate]="selectedDate()"
+        (selectedDayOfWeek)="handleSelectedDayOfWeek($event)"
       />
 
-      <app-summary-workout [routine]="todayRoutine()" />
+      <app-summary-workout [routine]="selectedRoutine()" />
     </div>
-  } @else if (activeProgramResource.isLoading()) {
-    <div class="flex justify-center py-16">
-      <span class="loading loading-spinner loading-lg"></span>
+  } @else {
+    <!-- Sin programa activo (el backend ha respondido 204) -->
+    <div class="card border border-base-300 bg-base-200">
+      <div class="card-body items-center text-center">
+        <h2 class="card-title">No tienes ningún programa activo</h2>
+        <p class="text-base-content/60">
+          Crea un programa o activa uno de los que ya tienes para ver aquí tu
+          rutina de cada día.
+        </p>
+        <a routerLink="/programs" class="btn btn-primary mt-2">Ir a Programas</a>
+      </div>
     </div>
   }
 </div>
