@@ -31,7 +31,7 @@ export class ProgramService {
     return this.http.get<ProgramResponse>(`${this.url}/${programId}`).pipe(
       catchError((error) => {
         console.error('Error fetching program:', error);
-        return throwError(() => new Error('Failed to fetch program. Please try again later.'));
+        return throwError(() => new Error('No se ha podido cargar el programa. Inténtalo de nuevo más tarde.'));
       })
     );
   }
@@ -41,7 +41,16 @@ export class ProgramService {
       tap(() => this.invalidateCache()),
       catchError((error) => {
         console.error('Error creating program:', error);
-        return throwError(() => new Error('Failed to create program. Please try again later.'));
+        return throwError(() => new Error('No se ha podido crear el programa. Inténtalo de nuevo más tarde.'));
+      })
+    );
+  }
+
+  findActiveProgram(): Observable<ProgramResponse> {
+    return this.http.get<ProgramResponse>(`${this.url}/active`).pipe(
+      catchError((error) => {
+        console.error('Error fetching active program:', error);
+        return throwError(() => new Error('No se ha podido cargar el programa activo. Inténtalo de nuevo más tarde.'));
       })
     );
   }
@@ -55,7 +64,7 @@ export class ProgramService {
       tap(() => this.invalidateCache()),
       catchError((error) => {
         console.error('Error deleting program:', error);
-        return throwError(() => new Error('Failed to delete program. Please try again later.'));
+        return throwError(() => new Error('No se ha podido eliminar el programa. Inténtalo de nuevo más tarde.'));
       })
     );
   }
@@ -65,7 +74,7 @@ export class ProgramService {
       tap(() => this.invalidateCache()),
       catchError((error) => {
         console.error('Error updating program:', error);
-        return throwError(() => new Error('Failed to update program. Please try again later.'));
+        return throwError(() => new Error('No se ha podido actualizar el programa. Inténtalo de nuevo más tarde.'));
       })
     );
   }

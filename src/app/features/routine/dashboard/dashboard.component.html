@@ -1,0 +1,12 @@
+<div class="page-container py-8">
+  @if (activeProgramResource.hasValue()) {
+    <app-calendar
+      [programName]="programName()"
+      [routines]="routines()"
+    />
+  } @else if (activeProgramResource.isLoading()) {
+    <div class="flex justify-center py-16">
+      <span class="loading loading-spinner loading-lg"></span>
+    </div>
+  }
+</div>

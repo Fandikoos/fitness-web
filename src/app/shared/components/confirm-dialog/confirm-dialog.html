@@ -4,16 +4,16 @@
     <p class="py-4 text-base-content/70">{{ message() }}</p>
     <div class="modal-action">
       @if (canDelete()) {
-        <button type="button" class="btn btn-ghost" (click)="close()">Cancel</button>
+        <button type="button" class="btn btn-ghost" (click)="close()">Cancelar</button>
         <button type="button" class="btn btn-error" (click)="confirm()">{{ confirmLabel() }}</button>
       } @else {
-        <button type="button" class="btn btn-primary" (click)="close()">OK</button>
+        <button type="button" class="btn btn-primary" (click)="close()">Aceptar</button>
       }
     </div>
   </div>
 
   <!-- Clicking outside the box closes the dialog without confirming -->
   <form method="dialog" class="modal-backdrop">
-    <button>close</button>
+    <button>cerrar</button>
   </form>
 </dialog>

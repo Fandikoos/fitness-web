@@ -3,8 +3,8 @@
     <div class="card-body">
       <app-create-header
         [currentStep]="1"
-        title="Create routine"
-        subtitle="Set up the basic details for your new routine"
+        title="Crear rutina"
+        subtitle="Configura los datos básicos de tu nueva rutina"
       />
 
       <!-- Form -->
@@ -12,20 +12,20 @@
 
         <!-- Name -->
         <fieldset class="fieldset">
-          <legend class="fieldset-legend">Program name *</legend>
+          <legend class="fieldset-legend">Nombre del programa *</legend>
           <input
             type="text"
             formControlName="name"
-            placeholder="e.g. Push Pull Legs, Full Body..."
+            placeholder="p. ej. Empuje Tirón Pierna, Cuerpo completo..."
             class="input input-bordered w-full"
             [class.input-error]="form.controls.name.touched && form.controls.name.invalid"
           />
           @if (form.controls.name.touched && form.controls.name.errors) {
             <p class="fieldset-label text-error">
               @if (form.controls.name.errors['required']) {
-                Name is required
+                El nombre es obligatorio
               } @else if (form.controls.name.errors['minlength']) {
-                Minimum 3 characters
+                Mínimo 3 caracteres
               }
             </p>
           }
@@ -33,14 +33,14 @@
 
         <!-- Description -->
         <fieldset class="fieldset">
-          <legend class="fieldset-legend">Description</legend>
+          <legend class="fieldset-legend">Descripción</legend>
           <textarea
             formControlName="description"
-            placeholder="Briefly describe your routine..."
+            placeholder="Describe brevemente tu rutina..."
             class="textarea textarea-bordered w-full resize-none"
             rows="3"
           ></textarea>
-          <span class="fieldset-label">Optional</span>
+          <span class="fieldset-label">Opcional</span>
         </fieldset>
 
         <!-- Active checkbox -->
@@ -52,20 +52,20 @@
               class="toggle toggle-primary"
             />
             <div>
-              <span class="font-medium">Set as active routine</span>
-              <p class="text-base-content/60 text-xs">This will be the routine you currently follow</p>
+              <span class="font-medium">Marcar como rutina activa</span>
+              <p class="text-base-content/60 text-xs">Será la rutina que sigues actualmente</p>
             </div>
           </label>
         </fieldset>
 
         <!-- Submit -->
         <div class="card-actions justify-between mt-2">
-          <button type="button" class="btn btn-ghost" (click)="onCancel()">Cancel</button>
+          <button type="button" class="btn btn-ghost" (click)="onCancel()">Cancelar</button>
           <button
             type="submit"
             class="btn btn-primary"
           >
-            Next
+            Siguiente
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
             </svg>

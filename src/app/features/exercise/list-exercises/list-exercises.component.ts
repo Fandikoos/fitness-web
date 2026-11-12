@@ -5,11 +5,8 @@ import { ExerciseService } from '../../../core/services/exercise.service';
 import { ExerciseTemplateResponse } from '../../../shared/interfaces/exercise-template.interface';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { RoutineExerciseRequest, RoutineExerciseResponse } from '../../../shared/interfaces/routine.interface';
-
-interface MuscleGroupTab {
-  label: string;
-  value: string;
-}
+import { MUSCLE_GROUPS } from '../../../shared/utils/muscle-groups';
+import { MuscleGroupLabelPipe } from '../../../shared/pipes/muscle-group-label.pipe';
 
 // Weight and reps stay null while the user has not typed them yet
 interface SetDraft {
@@ -28,25 +25,10 @@ interface ExerciseDraft {
 // Matches the backend column: precision = 5, scale = 2
 const MAX_WEIGHT_KG = 999.99;
 
-const MUSCLE_GROUPS: MuscleGroupTab[] = [
-  { label: 'Chest', value: 'CHEST' },
-  { label: 'Back', value: 'BACK' },
-  { label: 'Shoulders', value: 'SHOULDERS' },
-  { label: 'Biceps', value: 'BICEPS' },
-  { label: 'Triceps', value: 'TRICEPS' },
-  { label: 'Quads', value: 'QUADRICEPS' },
-  { label: 'Hamstrings', value: 'HAMSTRINGS' },
-  { label: 'Glutes', value: 'GLUTES' },
-  { label: 'Calves', value: 'CALVES' },
-  { label: 'Abs', value: 'ABS' },
-  { label: 'Forearms', value: 'FOREARMS' },
-  { label: 'Traps', value: 'TRAPS' },
-];
-
 @Component({
   selector: 'app-list-exercises',
   templateUrl: './list-exercises.component.html',
-  imports: [FormsModule, PaginationComponent],
+  imports: [FormsModule, PaginationComponent, MuscleGroupLabelPipe],
   styleUrls: ['./list-exercises.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -246,7 +228,7 @@ export class ListExercisesComponent {
   //       this.loading.set(false);
   //     },
   //     error: () => {
-  //       this.error.set('Failed to load exercises');
+  //       this.error.set('No se pudieron cargar los ejercicios');
   //       this.loading.set(false);
   //     },
   //   });

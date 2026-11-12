@@ -19,7 +19,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
 function extractMessage(error: HttpErrorResponse): string {
     if (error.status === 0) {
-        return 'Cannot connect to the server. Please try again later.';
+        return 'No se puede conectar con el servidor. Inténtalo de nuevo más tarde.';
     }
 
     const body = error.error as ErrorResponse | null;
@@ -27,5 +27,5 @@ function extractMessage(error: HttpErrorResponse): string {
     if (body?.errors?.length) {
         return `${body.message}: ${body.errors.join(', ')}`;
     }
-    return body?.message ? body.message : 'Unexpected error. Please try again.';
+    return body?.message ? body.message : 'Error inesperado. Inténtalo de nuevo.';
 }

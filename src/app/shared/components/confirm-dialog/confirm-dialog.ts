@@ -13,7 +13,7 @@ export class ConfirmDialog {
   message = input.required<string>();
   // true -> shows Delete + Cancel; false -> shows only an OK button
   canDelete = input<boolean>(false);
-  confirmLabel = input<string>('Delete');
+  confirmLabel = input<string>('Eliminar');
 
   confirmed = output<void>();
 

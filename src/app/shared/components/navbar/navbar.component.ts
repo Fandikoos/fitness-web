@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { CreateRoutineStateService } from '../../../core/services/create-routine-state.service';
 
 interface NavbarOption {
   label: string;
@@ -15,8 +16,17 @@ interface NavbarOption {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NavbarComponent {
+
+  private router = inject(Router);
+  private createRoutineState = inject(CreateRoutineStateService);
+
   readonly navbarOptions: NavbarOption[] = [
-    { label: 'Today', route: '/', exact: true },
-    { label: 'Programs', route: '/programs', exact: false },
+    { label: 'Hoy', route: '/', exact: true },
+    { label: 'Programas', route: '/programs', exact: false },
   ];
+
+  startNewProgram(): void {
+    this.createRoutineState.reset();
+    this.router.navigate(['/create/step-1']);
+  }
 }

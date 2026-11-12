@@ -30,8 +30,8 @@ export class ListProgramComponent {
       return '';
     }
     const routines = program.routines.length;
-    const routinesText = routines === 1 ? '1 routine' : `${routines} routines`;
-    return `"${program.name}" will be permanently deleted, along with its ${routinesText} and all their exercises and sets. This action cannot be undone.`;
+    const routinesText = routines === 1 ? 'su rutina' : `sus ${routines} rutinas`;
+    return `"${program.name}" se eliminará de forma permanente, junto con ${routinesText} y todos sus ejercicios y series. Esta acción no se puede deshacer.`;
   });
 
   programs = rxResource({

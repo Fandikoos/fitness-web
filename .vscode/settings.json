@@ -1,7 +1,8 @@
 {
     "angular-schematics.schematicsDefaultOptions": {
         "angular-*": {
-            "externalTemplate": true
+            "externalTemplate": true,
+            "style": "css"
         }
     },
     "js/ts.tsdk.path": "node_modules\\typescript\\lib"

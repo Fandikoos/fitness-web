@@ -1,5 +1,5 @@
-<div class="min-h-screen bg-base-200 p-6">
-  <div class="max-w-4xl mx-auto">
+<div class="min-h-screen bg-base-200 py-8">
+  <div class="page-container">
     <div class="flex items-center gap-4 mb-8">
       <button routerLink="/" class="btn btn-ghost btn-circle">
         <svg
@@ -18,9 +18,9 @@
         </svg>
       </button>
       <div>
-        <h1 class="text-3xl font-bold text-base-content">My Programs</h1>
+        <h1 class="text-3xl font-bold text-base-content">Mis programas</h1>
         <p class="text-base-content/60 text-sm mt-0.5">
-          All your saved workout programs
+          Todos tus programas de entrenamiento guardados
         </p>
       </div>
     </div>
@@ -49,13 +49,13 @@
             </svg>
           </div>
           <h2 class="text-lg font-semibold text-base-content">
-            No routines yet
+            Aún no tienes rutinas
           </h2>
           <p class="text-base-content/60 max-w-xs">
-            Create your first workout routine to get started
+            Crea tu primera rutina de entrenamiento para empezar
           </p>
           <button (click)="startNewProgram()" class="btn btn-primary mt-4">
-            Create Routine
+            Crear rutina
           </button>
         </div>
       </div>
@@ -89,7 +89,7 @@
                     {{ program.name }}
                   </h3>
                   @if (program.active) {
-                    <span class="badge badge-success badge-sm">Active</span>
+                    <span class="badge badge-success badge-sm">Activo</span>
                   }
                 </div>
                 <p class="text-sm text-base-content/60 truncate mt-0.5">
@@ -97,7 +97,7 @@
                 </p>
                 @if (program.routines.length) {
                   <p class="text-xs text-base-content/40 mt-1">
-                    {{ program.routines.length }} routine{{
+                    {{ program.routines.length }} rutina{{
                       program.routines.length === 1 ? "" : "s"
                     }}
                   </p>
@@ -108,7 +108,7 @@
                 <button
                   (click)="editProgram(program.id)"
                   class="btn btn-ghost btn-sm btn-square tooltip"
-                  data-tip="Edit"
+                  data-tip="Editar"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -127,7 +127,7 @@
                 </button>
                 <button
                   class="btn btn-ghost btn-sm btn-square text-error tooltip"
-                  data-tip="Delete"
+                  data-tip="Eliminar"
                   (click)="prepareDeleteProgram(program)"
                 >
                   <svg
@@ -155,16 +155,16 @@
 
   <app-confirm-dialog
     #deleteDialog
-    title="Delete program?"
+    title="¿Eliminar programa?"
     [message]="deleteMessage()"
     [canDelete]="true"
-    confirmLabel="Delete program"
+    confirmLabel="Eliminar programa"
     (confirmed)="deleteProgram()"
   />
 
   <app-confirm-dialog
     #errorDialog
-    title="Something went wrong"
-    message="The program could not be deleted. Please try again later."
+    title="Algo ha salido mal"
+    message="No se ha podido eliminar el programa. Inténtalo de nuevo más tarde."
   />
 </div>

@@ -5,6 +5,7 @@ import { ExerciseTemplateResponse } from '../../../shared/interfaces/exercise-te
 import { RoutineExerciseRequest, RoutineExerciseResponse, RoutineRequest, RoutineResponse } from '../../../shared/interfaces/routine.interface';
 import { RoutineService } from '../../../core/services/routine.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { MuscleGroupLabelPipe } from '../../../shared/pipes/muscle-group-label.pipe';
 
 @Component({
   selector: 'app-select-exercises',
@@ -13,6 +14,7 @@ import { ToastService } from '../../../core/services/toast.service';
   imports: [
     ListExercisesComponent,
     ReactiveFormsModule,
+    MuscleGroupLabelPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -22,7 +24,9 @@ export class SelectExercisesComponent implements OnInit {
   private routineService = inject(RoutineService);
   private toastService = inject(ToastService);
 
+  // dayOfWeek is the backend enum (e.g. MONDAY); dayLabel is what the user sees (e.g. Lunes)
   dayOfWeek = input.required<string>();
+  dayLabel = input.required<string>();
   programId = input.required<number>();
   routines = input.required<RoutineResponse[]>();
 
@@ -48,7 +52,7 @@ export class SelectExercisesComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.routineForm.controls.day.setValue(this.dayOfWeek());
+    this.routineForm.controls.day.setValue(this.dayLabel());
   }
 
   openExerciseModal(): void {
@@ -96,7 +100,7 @@ export class SelectExercisesComponent implements OnInit {
 
     const routine: RoutineRequest = {
         name: this.routineForm.controls.name.value,
-        dayOfWeek: this.routineForm.controls.day.value.toUpperCase(),
+        dayOfWeek: this.dayOfWeek(),
         description: this.routineForm.controls.description.value,
         programId: this.programId(),
         exercises,
@@ -110,9 +114,9 @@ export class SelectExercisesComponent implements OnInit {
 
       request$.subscribe({
         next: (response) => {
-          const action = routineId !== null ? 'updated' : 'created';
+          const action = routineId !== null ? 'actualizada' : 'creada';
           console.log(`Routine ${action} successfully:`, response);
-          this.toastService.success(`Routine ${action} successfully!`);
+          this.toastService.success(`¡Rutina ${action} correctamente!`);
           this.existingRoutineId.set(response.id);
         },
         error: (error) => {

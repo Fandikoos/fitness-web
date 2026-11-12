@@ -1,5 +1,5 @@
 <header class="bg-base-100 border-b border-base-300">
-  <nav class="navbar max-w-5xl mx-auto px-4 min-h-16">
+  <nav class="navbar page-container min-h-16">
     <div class="navbar-start gap-6">
       <!-- Logo -->
       <a routerLink="/" class="flex items-center gap-3">
@@ -44,7 +44,7 @@
     </div>
 
     <div class="navbar-end">
-      <a routerLink="/create/step-1" class="btn btn-primary rounded-lg">
+      <a (click)="startNewProgram()" class="btn btn-primary rounded-lg">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -55,7 +55,7 @@
         >
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
-        New program
+        Nuevo programa
       </a>
     </div>
   </nav>

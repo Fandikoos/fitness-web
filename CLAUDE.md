@@ -53,7 +53,11 @@ src/app/
 
 ## Language
 
-- All UI text (labels, placeholders, messages, buttons) must be in **English**
+- All UI text (labels, placeholders, messages, buttons, aria-labels, tooltips) must be in **Spanish (Spain)** — e.g. "serie", "repeticiones", "Inténtalo de nuevo"
+- Code (identifiers, comments, console logs) stays in English
+- Backend enums (e.g. `MONDAY`, `CHEST`) are never translated: keep a `{ label, value }` pair and show only the `label` (see `shared/utils/` and the `muscleGroupLabel` pipe)
+- The app uses the `es-ES` locale (`LOCALE_ID` in `app.config.ts`), so `DatePipe` outputs Spanish dates
+- An English translation may be added in the future (Angular i18n)
 
 ## TypeScript
 
