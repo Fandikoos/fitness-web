@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ToastResponse } from './shared/components/toast-response/toast-response.component';
 import { NavbarComponent } from './shared/components/navbar/navbar.component';
@@ -7,6 +7,7 @@ import { NavbarComponent } from './shared/components/navbar/navbar.component';
   selector: 'app-root',
   imports: [RouterOutlet, ToastResponse, NavbarComponent],
   templateUrl: './app.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './app.component.css'
 })
 export class AppComponent {
