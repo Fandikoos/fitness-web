@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Fitness-web is a gym workout routine management app built with Angular 19 as a learning project. The goal is to practice modern Angular patterns: signals, standalone components, OnPush change detection, lazy loading, pipes, and the new control flow syntax (`@if`, `@for`, `@switch`).
+Fitness-web is a gym workout routine management app built with Angular 22 as a learning project. The goal is to practice modern Angular patterns: signals, standalone components, OnPush change detection, lazy loading, pipes, and the new control flow syntax (`@if`, `@for`, `@switch`).
 
 ## Commands
 
 - **Dev server:** `ng serve` (http://localhost:4200, auto-reloads)
 - **Build:** `ng build` (production by default, output in `dist/fitness-web/`)
 - **Tests:** `ng test` (Karma + Jasmine)
-- **Generate component:** `ng g c features/<feature>/<component-name> --flat` (creates standalone by default in Angular 19)
+- **Generate component:** `ng g c features/<feature>/<component-name> --flat` (standalone by default; `angular.json` schematics keep the `.component.ts` suffix)
 - **Generate service:** `ng g s core/services/<service-name>`
 
 ## Architecture
@@ -40,7 +40,7 @@ src/app/
 - Global styles in `src/styles.css`: `@import "tailwindcss"` + `@plugin "daisyui"`
 - Components use DaisyUI's theming system; prefer DaisyUI semantic classes over raw Tailwind when a matching component exists
 
-## Angular 19 Conventions
+## Angular 22 Conventions
 
 - All components are **standalone** (no NgModules)
 - Use **`ChangeDetectionStrategy.OnPush`** on every component
