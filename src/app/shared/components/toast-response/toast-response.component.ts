@@ -1,5 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input, OnInit, signal } from '@angular/core';
-import { NgClass } from '../../../../../node_modules/@angular/common/common_module.d-NEF7UaHr';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ToastService } from '../../../core/services/toast.service';
 import { ToastType } from '../../interfaces/toast-response.interface';
 

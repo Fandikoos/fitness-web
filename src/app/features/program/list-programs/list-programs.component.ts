@@ -35,7 +35,7 @@ export class ListProgramComponent {
   });
 
   programs = rxResource({
-    loader: () => this.programService.getAll(),
+    stream: () => this.programService.getAll(),
   });
 
   startNewProgram(): void {

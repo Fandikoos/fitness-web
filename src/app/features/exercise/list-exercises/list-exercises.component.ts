@@ -56,12 +56,12 @@ export class ListExercisesComponent {
 
   // --- AFTER (rxResource) ---
   exercisesResource = rxResource({
-    request: () => ({
+    params: () => ({
       muscleGroup: this.activeMuscleGroup(),
       page: this.currentPage(),
     }),
-    loader: ({ request }) =>
-      this.exerciseService.getByMuscleGroup(request.page, this.pageSize, request.muscleGroup),
+    stream: ({ params }) =>
+      this.exerciseService.getByMuscleGroup(params.page, this.pageSize, params.muscleGroup),
   });
 
   exercises = computed(() => this.exercisesResource.value()?.content ?? []);

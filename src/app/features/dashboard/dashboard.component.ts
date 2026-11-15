@@ -21,7 +21,7 @@ export class DashboardComponent {
   selectedDate = signal<Date>(new Date());
 
   activeProgramResource = rxResource({
-    loader: () => this.programService.findActiveProgram(),
+    stream: () => this.programService.findActiveProgram(),
   });
 
   activeProgram = computed(() => this.activeProgramResource.value() ?? null);
