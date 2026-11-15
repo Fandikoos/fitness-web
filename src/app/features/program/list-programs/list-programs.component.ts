@@ -1,26 +1,45 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { ProgramService } from '../../../core/services/program.service';
 import { CreateRoutineStateService } from '../../../core/services/create-routine-state.service';
-import { httpResource } from '@angular/common/http';
+import { ProgramResponse } from '../../../shared/interfaces/program.interface';
+import { ConfirmDialog } from '../../../shared/components/confirm-dialog/confirm-dialog';
 
 @Component({
   selector: 'app-list-routine',
-  imports: [RouterLink],
+  imports: [RouterLink, ConfirmDialog],
   templateUrl: './list-programs.component.html',
   styleUrls: ['./list-programs.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ListRoutineComponent {
+export class ListProgramComponent {
 
   private programService = inject(ProgramService);
   private router = inject(Router);
   private createRoutineState = inject(CreateRoutineStateService);
 
-  programs = rxResource({
-    loader: () => this.programService.getAll(),
+  deleteDialog = viewChild.required<ConfirmDialog>('deleteDialog');
+  errorDialog = viewChild.required<ConfirmDialog>('errorDialog');
+
+  programToDelete = signal<ProgramResponse | null>(null);
+
+  deleteMessage = computed(() => {
+    const program = this.programToDelete();
+    if (!program) {
+      return '';
+    }
+    const routines = program.routines.length;
+    const routinesText = routines === 1 ? 'su rutina' : `sus ${routines} rutinas`;
+    return `"${program.name}" se eliminará de forma permanente, junto con ${routinesText} y todos sus ejercicios y series. Esta acción no se puede deshacer.`;
   });
+
+  programs = rxResource({
+    stream: () => this.programService.getAll(),
+  });
+
+  // value() lanza una excepción si la petición ha fallado: solo se lee cuando hasValue() es true
+  programList = computed(() => (this.programs.hasValue() ? this.programs.value() : []));
 
   startNewProgram(): void {
     this.createRoutineState.reset();
@@ -36,19 +55,27 @@ export class ListRoutineComponent {
     this.router.navigate(['/create/step-2']);
   }
 
-  prepareDeleteProgram(idProgram: number, nameProgram: string) {
-    window.alert(`Are you sure you want to delete this program ${nameProgram}?`);
+  prepareDeleteProgram(program: ProgramResponse) {
+    this.programToDelete.set(program);
+    this.deleteDialog().open();
+  }
 
-    this.programService.deleteProgram(idProgram).subscribe({
+  // Only called when the user clicks "Delete" in the dialog; Cancel/Esc/backdrop do nothing
+  deleteProgram() {
+    const program = this.programToDelete();
+    if (program === null) {
+      return;
+    }
+
+    this.programService.deleteProgram(program.id).subscribe({
       next: () => {
-        // Recarga automaticamente el resource después de eliminar el programa
+        this.programToDelete.set(null);
         this.programs.reload();
       },
       error: (error) => {
         console.error('Error deleting program:', error);
-        window.alert('Failed to delete program. Please try again later.');
+        this.errorDialog().open();
       }
     });
   }
 }
-

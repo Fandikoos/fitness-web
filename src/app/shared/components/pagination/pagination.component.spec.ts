@@ -14,6 +14,9 @@ describe('PaginationComponent', () => {
 
     fixture = TestBed.createComponent(PaginationComponent);
     component = fixture.componentInstance;
+    // Los inputs son obligatorios (input.required), hay que darles valor antes de renderizar
+    fixture.componentRef.setInput('currentPage', 0);
+    fixture.componentRef.setInput('totalPages', 3);
     fixture.detectChanges();
   });
 

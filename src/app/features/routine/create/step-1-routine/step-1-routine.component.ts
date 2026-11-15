@@ -41,7 +41,6 @@ export class Step1RoutineComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error fetching program:', error);
-          window.alert('Failed to fetch program details. Please try again later.');
         }
       });
     }
@@ -74,7 +73,6 @@ export class Step1RoutineComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error creating program:', error);
-          window.alert('Failed to create program. Please try again later.');
         },
       });
     } else {
@@ -84,7 +82,6 @@ export class Step1RoutineComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error updating program:', error);
-          window.alert('Failed to update program. Please try again later.');
         },
       });
     }

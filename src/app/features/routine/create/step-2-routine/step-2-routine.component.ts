@@ -6,6 +6,9 @@ import { SelectExercisesComponent } from '../../../exercise/select-exercises/sel
 import { ProgramResponse } from '../../../../shared/interfaces/program.interface';
 import { RoutineService } from '../../../../core/services/routine.service';
 import { RoutineResponse } from '../../../../shared/interfaces/routine.interface';
+import { ProgramService } from '../../../../core/services/program.service';
+import { ToastService } from '../../../../core/services/toast.service';
+import { DAYS_OF_WEEK } from '../../../../shared/utils/days-of-week';
 
 @Component({
   selector: 'app-step-2-routine',
@@ -18,10 +21,12 @@ export class Step2RoutineComponent implements OnInit {
   private router = inject(Router);
   private createRoutineState = inject(CreateRoutineStateService);
   private routineService = inject(RoutineService);
+  private programService = inject(ProgramService);
+  private toastService = inject(ToastService);
 
   programId = this.createRoutineState.programId;
   routines = signal<RoutineResponse[]>([]);
-  dayOfWeeks = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  readonly dayOfWeeks = DAYS_OF_WEEK;
 
   ngOnInit(): void {
     const id = this.programId();
@@ -42,8 +47,8 @@ export class Step2RoutineComponent implements OnInit {
     this.router.navigate(['/']);
   }
 
-  onSave(): void {
-    window.alert('Routine saved successfully!');
+  onFinalize(): void {
+    this.toastService.success('¡Rutina finalizada correctamente!');
     this.createRoutineState.reset();
     this.router.navigate(['/']);
   }

@@ -1,11 +1,11 @@
 export default [
     {
         path: '',
-        loadComponent: () => import('./dashboard/dashboard-routine.component').then((m) => m.DashboardRoutineComponent),
+        loadComponent: () => import('../dashboard/dashboard.component').then((m) => m.DashboardComponent),
     },
     {
-        path: 'routines',
-        loadComponent: () => import('../program/list-programs/list-programs.component').then((m) => m.ListRoutineComponent),
+        path: 'programs',
+        loadComponent: () => import('../program/list-programs/list-programs.component').then((m) => m.ListProgramComponent),
     },
     {
         path: 'create/step-1',

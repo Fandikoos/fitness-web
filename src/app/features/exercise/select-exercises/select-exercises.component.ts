@@ -2,8 +2,10 @@ import { ChangeDetectionStrategy, Component, effect, inject, input, OnInit, sign
 import { ListExercisesComponent } from '../list-exercises/list-exercises.component';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ExerciseTemplateResponse } from '../../../shared/interfaces/exercise-template.interface';
-import { RoutineExerciseRequest, RoutineRequest, RoutineResponse } from '../../../shared/interfaces/routine.interface';
+import { RoutineExerciseRequest, RoutineExerciseResponse, RoutineRequest, RoutineResponse } from '../../../shared/interfaces/routine.interface';
 import { RoutineService } from '../../../core/services/routine.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { MuscleGroupLabelPipe } from '../../../shared/pipes/muscle-group-label.pipe';
 
 @Component({
   selector: 'app-select-exercises',
@@ -12,6 +14,7 @@ import { RoutineService } from '../../../core/services/routine.service';
   imports: [
     ListExercisesComponent,
     ReactiveFormsModule,
+    MuscleGroupLabelPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -19,8 +22,11 @@ export class SelectExercisesComponent implements OnInit {
 
   private fb = inject(FormBuilder);
   private routineService = inject(RoutineService);
+  private toastService = inject(ToastService);
 
+  // dayOfWeek is the backend enum (e.g. MONDAY); dayLabel is what the user sees (e.g. Lunes)
   dayOfWeek = input.required<string>();
+  dayLabel = input.required<string>();
   programId = input.required<number>();
   routines = input.required<RoutineResponse[]>();
 
@@ -30,7 +36,7 @@ export class SelectExercisesComponent implements OnInit {
     description: [''],
   });
 
-  selectedExercises = signal<ExerciseTemplateResponse[]>([]);
+  selectedExercises = signal<RoutineExerciseResponse[]>([]);
   private existingRoutineId = signal<number | null>(null);
   private prefilled = false;
 
@@ -46,15 +52,16 @@ export class SelectExercisesComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.routineForm.controls.day.setValue(this.dayOfWeek());
+    this.routineForm.controls.day.setValue(this.dayLabel());
   }
 
   openExerciseModal(): void {
-    this.listExercises().open();
+    this.listExercises().open(this.selectedExercises());
   }
 
-  onExercisesSelected(exercises: ExerciseTemplateResponse[]): void {
-    this.selectedExercises.update(current => [...current, ...exercises]);
+  // The modal edits the whole list, so its result replaces the current one
+  onExercisesSelected(exercises: RoutineExerciseResponse[]): void {
+    this.selectedExercises.set(exercises);
   }
 
   removeExercise(index: number): void {
@@ -80,16 +87,20 @@ export class SelectExercisesComponent implements OnInit {
       return;
     }
 
-    const exercises: RoutineExerciseRequest[] = this.selectedExercises().map((exercise, i) => ({
-      exerciseTemplateId: exercise.id,
-      orderInRoutine: i + 1,
-      notes: '',
-      sets: [],
-    }));
+    const exercises: RoutineExerciseRequest[] = [];
+    for (let i = 0; i < this.selectedExercises().length; i++) {
+      const exercise = this.selectedExercises()[i];
+      exercises.push({
+        exerciseTemplateId: exercise.exerciseTemplate.id,
+        orderInRoutine: i + 1,
+        notes: exercise.notes,
+        sets: exercise.sets.map(({ numberSet, weightKg, reps, rpe }) => ({ numberSet, weightKg, reps, rpe })),
+      });
+    }
 
     const routine: RoutineRequest = {
       name: this.routineForm.controls.name.value,
-      dayOfWeek: this.routineForm.controls.day.value.toUpperCase(),
+      dayOfWeek: this.dayOfWeek(),
       description: this.routineForm.controls.description.value,
       programId: this.programId(),
       exercises,
@@ -103,14 +114,13 @@ export class SelectExercisesComponent implements OnInit {
 
     request$.subscribe({
       next: (response) => {
-        const action = routineId !== null ? 'updated' : 'created';
+        const action = routineId !== null ? 'actualizada' : 'creada';
         console.log(`Routine ${action} successfully:`, response);
-        window.alert(`Routine ${action} successfully!`);
+        this.toastService.success(`¡Rutina ${action} correctamente!`);
         this.existingRoutineId.set(response.id);
       },
       error: (error) => {
         console.error('Error saving routine:', error);
-        window.alert('Failed to save routine. Please try again later.');
       },
     });
   }
@@ -128,8 +138,9 @@ export class SelectExercisesComponent implements OnInit {
       name: existing.name,
       description: existing.description,
     });
+
     this.selectedExercises.set(
-      existing.exercises.map(e => e.exerciseTemplate)
+      [...existing.exercises].sort((a, b) => a.orderInRoutine - b.orderInRoutine)
     );
   }
 }
