@@ -1,12 +1,10 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import { RoutineRequest, RoutineResponse } from '../../shared/interfaces/routine.interface';
 import { catchError, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class RoutineService {
 
   private http = inject(HttpClient);

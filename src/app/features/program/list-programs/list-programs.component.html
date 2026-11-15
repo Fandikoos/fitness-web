@@ -29,7 +29,24 @@
       <div class="flex flex-col gap-4">
         <span class="loading loading-spinner loading-lg"></span>
       </div>
-    } @else if (programs.value()?.length === 0) {
+    } @else if (programs.error()) {
+      <!-- Error: el interceptor ya muestra el toast, aquí damos la opción de reintentar -->
+      <div class="card border border-base-300 bg-base-200">
+        <div class="card-body items-center text-center">
+          <h2 class="card-title">No se han podido cargar tus programas</h2>
+          <p class="text-base-content/60">
+            Comprueba tu conexión e inténtalo de nuevo.
+          </p>
+          <button
+            type="button"
+            class="btn btn-primary mt-2"
+            (click)="programs.reload()"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    } @else if (programList().length === 0) {
       <div class="card bg-base-100 shadow-sm">
         <div class="card-body items-center text-center py-16">
           <div class="bg-base-200 rounded-full p-5 mb-3">
@@ -61,7 +78,7 @@
       </div>
     } @else {
       <div class="flex flex-col gap-3">
-        @for (program of programs.value(); track program.id) {
+        @for (program of programList(); track program.id) {
           <div
             class="card bg-base-100 shadow-sm hover:shadow-md transition-shadow duration-200"
           >

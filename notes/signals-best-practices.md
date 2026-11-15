@@ -2,6 +2,11 @@
 
 Guia de patrones recomendados, anti-patrones a evitar, y como combinar signals con RxJS.
 
+> **Actualizado a Angular 22.** Cambios respecto a Angular 19:
+> - `OnPush` es la estrategia **por defecto** desde Angular 22 (la seguimos escribiendo por convencion).
+> - `allowSignalWrites` esta deprecado desde Angular 19: escribir signals en un effect ya esta permitido sin esa opcion.
+> - Para cargar datos del backend el patron recomendado es `rxResource()` (estable en Angular 22), no signals manuales + `subscribe()`.
+
 ---
 
 ## Reglas fundamentales
@@ -10,14 +15,14 @@ Guia de patrones recomendados, anti-patrones a evitar, y como combinar signals c
 
 ```ts
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,  // siempre
+  changeDetection: ChangeDetectionStrategy.OnPush,  // en Angular 22 es el valor por defecto, lo escribimos igual por convencion
 })
 export class MyComponent {
   data = signal<Data[]>([]);  // estado como signal, siempre
 }
 ```
 
-No uses variables normales para estado que se muestra en el template. Con Zoneless, simplemente no funcionaran.
+No uses variables normales para estado que se muestra en el template. Con OnPush no se repintaran de forma fiable, y con Zoneless directamente no funcionaran.
 
 ### 2. Computed antes que effect — siempre
 
@@ -32,7 +37,7 @@ hasExercises = signal(false);
 constructor() {
   effect(() => {
     this.hasExercises.set(this.exercises().length > 0);
-  }, { allowSignalWrites: true });
+  });
 }
 ```
 
@@ -63,55 +68,63 @@ Regla rapida:
 
 ## Patrones recomendados
 
-### Patron: cargar datos del backend
+### Patron: cargar datos del backend (rxResource)
 
 ```ts
-export class ListExercisesComponent {
-  private exerciseService = inject(ExerciseService);
+export class ListProgramsComponent {
+  private programService = inject(ProgramService);
 
-  exercises = signal<ExerciseTemplateResponse[]>([]);
-  loading = signal(false);
-  error = signal<string | null>(null);
+  // rxResource gestiona loading, error y la suscripcion por ti
+  programs = rxResource({
+    stream: () => this.programService.getAll(),
+  });
 
-  ngOnInit(): void {
-    this.loadExercises();
-  }
-
-  private loadExercises(): void {
-    this.loading.set(true);
-    this.error.set(null);
-    this.exerciseService.getAll().subscribe({
-      next: (data) => {
-        this.exercises.set(data);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set('Failed to load exercises');
-        this.loading.set(false);
-      },
-    });
-  }
+  // Protegido con hasValue(): value() lanza excepcion si la peticion fallo
+  programList = computed(() => (this.programs.hasValue() ? this.programs.value() : []));
 }
 ```
 
 Template:
 ```html
-@if (loading()) {
+@if (programs.isLoading()) {
   <span class="loading loading-spinner"></span>
-}
-
-@if (error(); as err) {
-  <div class="alert alert-error">{{ err }}</div>
-}
-
-@for (exercise of exercises(); track exercise.id) {
-  <p>{{ exercise.name }}</p>
-} @empty {
-  <p>No exercises found</p>
+} @else if (programs.error()) {
+  <div class="alert alert-error">No se pudieron cargar los programas</div>
+} @else {
+  @for (program of programList(); track program.id) {
+    <p>{{ program.name }}</p>
+  } @empty {
+    <p>No hay programas</p>
+  }
 }
 ```
 
-Este patron usa tres signals separadas (`exercises`, `loading`, `error`) en lugar de un unico objeto `{ data, loading, error }`. Esto permite actualizar cada estado independientemente y que el template reaccione granularmente.
+Detalles en [rxresource-pattern.md](rxresource-pattern.md).
+
+#### La forma antigua (signals manuales)
+
+Antes de `rxResource` se usaban tres signals separadas (`exercises`, `loading`, `error`) y un `subscribe()` manual. Sigue funcionando, y es el patron correcto para **acciones** (POST/PUT/DELETE), pero para **leer** datos `rxResource` hace lo mismo con mucho menos codigo:
+
+```ts
+exercises = signal<ExerciseTemplateResponse[]>([]);
+loading = signal(false);
+error = signal<string | null>(null);
+
+private loadExercises(): void {
+  this.loading.set(true);
+  this.error.set(null);
+  this.exerciseService.getAll().subscribe({
+    next: (data) => {
+      this.exercises.set(data);
+      this.loading.set(false);
+    },
+    error: () => {
+      this.error.set('No se pudieron cargar los ejercicios');
+      this.loading.set(false);
+    },
+  });
+}
+```
 
 ### Patron: filtro + lista
 
@@ -182,7 +195,7 @@ toggleFilters(): void {
 
 ```ts
 // core/services/ui-state.service.ts
-@Injectable({ providedIn: 'root' })
+@Service()   // Angular 22 (antes: @Injectable({ providedIn: 'root' }))
 export class UiStateService {
   sidebarOpen = signal(false);
   selectedTheme = signal<'light' | 'dark'>('light');
@@ -221,7 +234,7 @@ En el template del navbar:
 Si quieres que los componentes lean pero no escriban:
 
 ```ts
-@Injectable({ providedIn: 'root' })
+@Service()   // Angular 22 (antes: @Injectable({ providedIn: 'root' }))
 export class AuthService {
   // Privada y escribible
   private _user = signal<User | null>(null);
@@ -281,7 +294,7 @@ isEven = signal(false);
 constructor() {
   effect(() => {
     this.isEven.set(this.count() % 2 === 0);
-  }, { allowSignalWrites: true });
+  });
 }
 
 // BIEN
@@ -348,8 +361,20 @@ constructor() {
   effect(() => {
     console.log(this.count());
     this.count.update(c => c + 1);  // cambia count → dispara el effect → repite
-  }, { allowSignalWrites: true });
+  });
 }
+```
+
+Si de verdad necesitas leer una signal dentro de un effect **sin** que se convierta en dependencia, usa `untracked()`:
+
+```ts
+import { untracked } from '@angular/core';
+
+effect(() => {
+  const id = this.selectedId();                 // dependencia: el effect se re-ejecuta si cambia
+  const total = untracked(() => this.count());  // se lee, pero NO es dependencia
+  console.log(id, total);
+});
 ```
 
 ### Anti-patron 5: demasiadas signals granulares vs una signal de objeto
@@ -450,8 +475,9 @@ Este es el patron perfecto cuando necesitas operadores de RxJS (debounce, switch
 6. **toSignal/toObservable** — para conectar signals con RxJS donde sea necesario
 7. **No guardes el valor de una signal en una variable** — lee la signal donde la necesites
 8. **Separa signals que cambian independientemente, agrupa las que cambian juntas**
-9. **`linkedSignal()` para signals escribibles que dependen de otra** — no effect + allowSignalWrites
+9. **`linkedSignal()` para signals escribibles que dependen de otra** — no un effect que escribe signals
 10. **effect() solo para side effects reales** — logging, localStorage, DOM imperativo, navegacion
+11. **`rxResource()` para leer datos del backend** — y comprobar `hasValue()` antes de leer `value()`
 
 ---
 
@@ -471,6 +497,12 @@ Este es el patron perfecto cuando necesitas operadores de RxJS (debounce, switch
 │   computed()    → valor calculado, lazy, memoizado        │
 │                                                          │
 ├─────────────────────────────────────────────────────────┤
+│                    ASINCRONO                              │
+│                                                          │
+│   rxResource()  → datos async (HTTP) como signals         │
+│                   value / isLoading / error / status      │
+│                                                          │
+├─────────────────────────────────────────────────────────┤
 │                    EFECTOS                                │
 │                                                          │
 │   effect()      → side effects (logs, API, DOM, nav)     │
@@ -484,7 +516,7 @@ Este es el patron perfecto cuando necesitas operadores de RxJS (debounce, switch
 ├─────────────────────────────────────────────────────────┤
 │                    RENDIMIENTO                            │
 │                                                          │
-│   OnPush        → solo re-check cuando hay razon         │
+│   OnPush        → por defecto en v22, re-check con razon │
 │   Zoneless      → sin Zone.js, signals como motor        │
 │                                                          │
 └─────────────────────────────────────────────────────────┘
@@ -496,3 +528,5 @@ Este es el patron perfecto cuando necesitas operadores de RxJS (debounce, switch
 2. [signals-computed-vs-effect.md](signals-computed-vs-effect.md) — computed vs effect en profundidad
 3. [signals-change-detection-zoneless.md](signals-change-detection-zoneless.md) — como signals reemplazan a Zone.js
 4. [signals-best-practices.md](signals-best-practices.md) — este archivo, patrones y anti-patrones
+5. [rxresource-pattern.md](rxresource-pattern.md) — cargar datos del backend con rxResource
+6. [angular-22-novedades.md](angular-22-novedades.md) — que ha cambiado de Angular 19 a 22

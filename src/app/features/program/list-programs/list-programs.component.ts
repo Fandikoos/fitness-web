@@ -38,6 +38,9 @@ export class ListProgramComponent {
     stream: () => this.programService.getAll(),
   });
 
+  // value() lanza una excepción si la petición ha fallado: solo se lee cuando hasValue() es true
+  programList = computed(() => (this.programs.hasValue() ? this.programs.value() : []));
+
   startNewProgram(): void {
     this.createRoutineState.reset();
     this.router.navigate(['/create/step-1']);

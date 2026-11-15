@@ -54,7 +54,7 @@ export class ListExercisesComponent {
   private readonly pageSize = 8;
   private dialogRef = viewChild.required<ElementRef<HTMLDialogElement>>('exerciseDialog');
 
-  // --- AFTER (rxResource) ---
+  // Recarga sola cuando cambia el grupo muscular o la página
   exercisesResource = rxResource({
     params: () => ({
       muscleGroup: this.activeMuscleGroup(),
@@ -64,10 +64,13 @@ export class ListExercisesComponent {
       this.exerciseService.getByMuscleGroup(params.page, this.pageSize, params.muscleGroup),
   });
 
-  exercises = computed(() => this.exercisesResource.value()?.content ?? []);
-  totalPages = computed(() => this.exercisesResource.value()?.totalPages ?? 0);
-  totalElements = computed(() => this.exercisesResource.value()?.totalElements ?? 0);
-  // In the template: loading() -> exercisesResource.isLoading(), error() -> exercisesResource.error()
+  // value() lanza una excepción si la petición ha fallado, así que solo se lee si hasValue() es true.
+  // Si no hay datos (cargando o error), la página es null y los computed de abajo dan valores vacíos.
+  private page = computed(() => (this.exercisesResource.hasValue() ? this.exercisesResource.value() : null));
+
+  exercises = computed(() => this.page()?.content ?? []);
+  totalPages = computed(() => this.page()?.totalPages ?? 0);
+  totalElements = computed(() => this.page()?.totalElements ?? 0);
 
   open(current: RoutineExerciseResponse[] = []): void {
     this.selectedExercises.set(new Map(
@@ -75,7 +78,7 @@ export class ListExercisesComponent {
     ));
     this.activeMuscleGroup.set('CHEST');
     this.currentPage.set(0);
-    // BEFORE: this.loadExercises(); — now rxResource reacts automatically to signal changes
+    // No hace falta pedir los ejercicios a mano: rxResource reacciona a los cambios de las signals
     this.dialogRef().nativeElement.showModal();
   }
 

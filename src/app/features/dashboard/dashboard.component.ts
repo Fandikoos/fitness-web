@@ -24,7 +24,9 @@ export class DashboardComponent {
     stream: () => this.programService.findActiveProgram(),
   });
 
-  activeProgram = computed(() => this.activeProgramResource.value() ?? null);
+  // value() lanza una excepción si la petición ha fallado: solo se lee cuando hasValue() es true.
+  // Hoy el template ya comprueba el error antes, pero así el computed es seguro lo lea quien lo lea.
+  activeProgram = computed(() => (this.activeProgramResource.hasValue() ? this.activeProgramResource.value() : null));
 
   programName = computed(() => this.activeProgram()?.name ?? '');
 

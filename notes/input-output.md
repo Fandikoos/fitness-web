@@ -159,6 +159,39 @@ Es azucar sintactico para: `[ngModel]="name" (ngModelChange)="name = $event"`.
 
 ---
 
+## `model()` — Two-way binding entre tus propios componentes
+
+Cuando el hijo necesita **leer y tambien cambiar** un valor del padre (un toggle, un selector, un contador), en vez de un `input()` + un `output()` se usa `model()`:
+
+```ts
+// En el hijo
+import { model } from '@angular/core';
+
+export class DaySelectorComponent {
+  selectedDay = model<string>('MONDAY');   // input + output en uno
+
+  select(day: string): void {
+    this.selectedDay.set(day);   // cambia el valor Y avisa al padre
+  }
+}
+```
+
+```html
+<!-- En el padre: "banana in a box" [( )] con una signal -->
+<app-day-selector [(selectedDay)]="day" />
+```
+
+```ts
+// En el padre
+day = signal('MONDAY');   // se actualiza solo cuando el hijo llama a set()
+```
+
+Por debajo, `model()` crea un input `selectedDay` y un output `selectedDayChange`.
+
+> **Angular 22:** si un componente tiene un `model()` y un `output()` con el mismo nombre (por ejemplo `selectedDay` y `selectedDayChange`), ahora da error de compilacion. `ng update` lo migra solo.
+
+---
+
 ## Resumen del flujo de datos
 
 ```
@@ -172,3 +205,11 @@ Padre                          Hijo
 
 Regla: los datos siempre bajan con `[]`, los eventos siempre suben con `()`.
 Nunca al reves — un hijo no modifica datos del padre directamente.
+La unica excepcion controlada es `model()` con `[( )]`, que es una forma corta de escribir un input + un output.
+
+---
+
+## Novedades de Angular 21-22 relacionadas
+
+- **Error al leer un input obligatorio demasiado pronto** (Angular 21): leer un `input.required()` en el constructor o en la declaracion de un campo da error de compilacion. Leelo en `ngOnInit`, en un `computed()` o en el template.
+- **Input enlazado dos veces** (Angular 22, error NG1054): si enlazas el mismo input dos veces en un elemento (por ejemplo, con su nombre y con su alias), ahora el error salta al compilar.

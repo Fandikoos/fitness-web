@@ -1,9 +1,7 @@
-import { Injectable, signal } from '@angular/core';
+import { Service, signal } from '@angular/core';
 import { ToastResponse, ToastType } from '../../shared/interfaces/toast-response.interface';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Service()
 export class ToastService {
   private nextId = 0;
   private readonly _toasts = signal<ToastResponse[]>([]);

@@ -1,5 +1,7 @@
 # Angular Signals — Fundamentos
 
+> **Revisado para Angular 22.** Lo basico (`signal`, `computed`, `set`, `update`, igualdad) no ha cambiado. Se ha añadido `linkedSignal()`, `model()` y `rxResource()` a la tabla de tipos. Todas las APIs de signals que aparecen aqui son estables.
+
 ## Que son las Signals
 
 Una signal es un **contenedor reactivo** que guarda un valor y notifica automaticamente a todo lo que depende de ella cuando ese valor cambia.
@@ -107,13 +109,21 @@ dayOfWeek = input.required<string>();
 console.log(this.dayOfWeek());  // "Monday"
 ```
 
+### Otros tipos de signal que veras
+
+- **`linkedSignal()`** — escribible, pero se resetea cuando cambia otra signal (ver [signals-computed-vs-effect.md](signals-computed-vs-effect.md))
+- **`model()`** — un input que el hijo **tambien puede escribir** (two-way binding, ver [input-output.md](input-output.md))
+- **`rxResource()`** — no es una signal, sino un objeto con varias signals (`value()`, `isLoading()`, `error()`...) para datos asincronos (ver [rxresource-pattern.md](rxresource-pattern.md))
+
 ### Resumen de tipos
 
 | Funcion | Tipo que devuelve | Lectura | Escritura | Quien controla el valor |
 |---|---|---|---|---|
 | `signal()` | `WritableSignal<T>` | Si | Si | El componente que la creo |
 | `computed()` | `Signal<T>` | Si | No | Se calcula automaticamente |
+| `linkedSignal()` | `WritableSignal<T>` | Si | Si | Se calcula, pero se puede sobrescribir |
 | `input()` | `InputSignal<T>` | Si | No | El componente padre |
+| `model()` | `ModelSignal<T>` | Si | Si | Padre e hijo (two-way) |
 
 ---
 
@@ -133,7 +143,9 @@ console.log(name());  // "Push-ups"
 <p>{{ exercises().length }} exercises</p>
 ```
 
-### Ejemplo real del proyecto (ListExercisesComponent)
+### Ejemplo (version antigua de ListExercisesComponent)
+
+> Ahora `ListExercisesComponent` usa `rxResource`, que te da `isLoading()` y `error()` ya hechos (ver [rxresource-pattern.md](rxresource-pattern.md)). El ejemplo sigue siendo valido para entender como se leen las signals.
 
 ```ts
 exercises = signal<ExerciseTemplateResponse[]>([]);
@@ -221,13 +233,14 @@ moveExercise(index: number, direction: 'up' | 'down'): void {
 }
 ```
 
-### Ejemplo real del proyecto (ListExercisesComponent)
+### Ejemplo (version antigua de ListExercisesComponent)
 
 ```ts
 loading = signal(false);
 exercises = signal<ExerciseTemplateResponse[]>([]);
 
 // CARGAR — tiene el valor nuevo directo del backend → set
+// (hoy esta carga la hace rxResource, pero el set vs update se aplica igual)
 loadExercises(): void {
   this.loading.set(true);
   this.exerciseService.getAll().subscribe({
@@ -260,12 +273,12 @@ toggleExercise(id: number): void {
 
 ## Signals en servicios — estado compartido
 
-Las signals no son solo para componentes. Cuando las pones en un servicio `providedIn: 'root'`, actuan como **estado global compartido**.
+Las signals no son solo para componentes. Cuando las pones en un servicio singleton (`@Service()`, antes `@Injectable({ providedIn: 'root' })`), actuan como **estado global compartido**.
 
 ### Ejemplo real del proyecto (CreateRoutineStateService)
 
 ```ts
-@Injectable({ providedIn: 'root' })
+@Service()   // Angular 22 (antes: @Injectable({ providedIn: 'root' }))
 export class CreateRoutineStateService {
   programId = signal<number | null>(null);
 

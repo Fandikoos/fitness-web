@@ -15,7 +15,9 @@ Angular ofrece dos enfoques de formularios:
 | Testing | Dificil (depende del DOM) | Facil (puro TypeScript) |
 | Validaciones | Directivas en el template (`required`, etc.) | Funciones en el TypeScript (`Validators.required`) |
 
-**Recomendacion:** Usar reactive forms siempre. Es el estandar en Angular moderno.
+**Recomendacion:** En este proyecto usamos reactive forms. Siguen siendo totalmente validos y soportados en Angular 22.
+
+> **Angular 22 — Signal Forms:** existe un tercer enfoque, **Signal Forms** (`@angular/forms/signals`), experimental en Angular 21 y **estable en Angular 22**. El formulario se construye a partir de una signal en vez de con `FormGroup`. Hay un resumen al final de esta nota y en [angular-22-novedades.md](angular-22-novedades.md).
 
 ---
 
@@ -298,6 +300,13 @@ removeExercise(index: number): void {
 
 ---
 
+## Novedades de Angular 20-21 en reactive forms
+
+- `markAllAsDirty()` (Angular 20): como `markAllAsTouched()`, pero marca los controles como "dirty".
+- `FormArrayDirective` (Angular 21): permite que un `FormArray` sea el elemento raiz de un formulario (`<form [formArray]="...">`).
+
+---
+
 ## Resumen rapido
 
 1. Importar `ReactiveFormsModule` en el componente
@@ -305,3 +314,49 @@ removeExercise(index: number): void {
 3. Vincular con `[formGroup]` y `formControlName`
 4. Mostrar errores con `@if (control.touched && control.errors)`
 5. En submit: verificar `form.invalid`, si no es valido `markAllAsTouched()`, si es valido enviar datos
+
+---
+
+## Para comparar: el mismo formulario con Signal Forms (Angular 22)
+
+Solo para que te suene. **No hace falta migrar**: reactive forms siguen siendo estandar. La idea es que el modelo del formulario **es una signal** y las validaciones se declaran en un "schema":
+
+```ts
+import { form, required, minLength, FormField } from '@angular/forms/signals';
+
+@Component({
+  imports: [FormField],
+  // ...
+})
+export class RoutineFormComponent {
+  // 1. El modelo es una signal normal
+  routine = signal({ name: '', description: '' });
+
+  // 2. form() crea el arbol de campos y declara las validaciones
+  routineForm = form(this.routine, (path) => {
+    required(path.name, { message: 'El nombre es obligatorio' });
+    minLength(path.name, 3, { message: 'Mínimo 3 caracteres' });
+  });
+}
+```
+
+```html
+<!-- 3. En el template se enlaza cada input con [formField] -->
+<input [formField]="routineForm.name" class="input" />
+
+@if (routineForm.name().touched() && routineForm.name().invalid()) {
+  @for (error of routineForm.name().errors(); track error.kind) {
+    <p class="text-error text-sm">{{ error.message }}</p>
+  }
+}
+```
+
+| | Reactive Forms | Signal Forms |
+|---|---|---|
+| Modelo | `FormGroup` / `FormControl` | Una `signal()` con un objeto normal |
+| Valor | `form.value` / `valueChanges` (Observable) | Es la propia signal: `routine()` |
+| Estado | `control.valid`, `control.touched` (propiedades) | `field().valid()`, `field().touched()` (signals) |
+| Validaciones | Array de `Validators` por control | Funciones en el schema: `required(path.name)` |
+| Directiva | `formControlName` | `[formField]` |
+
+> Los nombres (`form`, `required`, `minLength`, `FormField`, `[formField]`) estan comprobados contra `@angular/forms` 22.2 instalado en el proyecto. Ojo con tutoriales antiguos: en las primeras versiones experimentales la directiva se llamaba `[field]` y varias APIs cambiaron antes de ser estables.

@@ -1,6 +1,12 @@
 # Signals, Change Detection y Zoneless
 
-Este documento explica como se relacionan tres conceptos fundamentales de Angular: las signals, el sistema de change detection, y el futuro Zoneless. Entender esta relacion es clave para escribir componentes eficientes.
+Este documento explica como se relacionan tres conceptos fundamentales de Angular: las signals, el sistema de change detection, y Zoneless. Entender esta relacion es clave para escribir componentes eficientes.
+
+> **Actualizado a Angular 22.** Cambios respecto a Angular 19:
+> - `ChangeDetectionStrategy.Default` se ha renombrado a **`ChangeDetectionStrategy.Eager`** (`Default` sigue existiendo como alias deprecado y se eliminara).
+> - **`OnPush` es la estrategia por defecto** desde Angular 22 (antes lo era `Default`/`Eager`).
+> - **Zoneless es estable** desde Angular 20.2 y es lo que generan las apps nuevas desde Angular 21. El provider se llama `provideZonelessChangeDetection()` (sin `Experimental`).
+> - **Este proyecto ya es zoneless** (desde la migracion a Angular 22): `provideZonelessChangeDetection()` en `app.config.ts` y sin el paquete `zone.js`. Ver la seccion "Tu proyecto y Zoneless".
 
 ---
 
@@ -36,14 +42,15 @@ public class ChangeDetector implements DataObserver {
 
 ## Las dos estrategias de Change Detection
 
-### 1. `ChangeDetectionStrategy.Default`
+### 1. `ChangeDetectionStrategy.Eager` (antes llamada `Default`)
 
 Angular revisa el componente en **cada ciclo de deteccion**, aunque nada haya cambiado.
 
 ```ts
 @Component({
-  // Sin especificar changeDetection = Default
-  changeDetection: ChangeDetectionStrategy.Default,
+  // Hasta Angular 21: sin especificar changeDetection = Default (Eager)
+  // Desde Angular 22: sin especificar changeDetection = OnPush
+  changeDetection: ChangeDetectionStrategy.Eager,   // en Angular <= 21 se llamaba Default
 })
 export class MyComponent {
   name = 'Push-ups';
@@ -55,12 +62,14 @@ Flujo:
 Evento (click, HTTP response, setTimeout) ocurre
   → Zone.js lo intercepta
   → Angular dispara change detection
-  → Revisa TODOS los componentes con Default
+  → Revisa TODOS los componentes con Eager
   → Compara cada binding del template con su valor anterior
   → Actualiza el DOM si algo cambio
 ```
 
-Problema: si tienes 100 componentes con Default, Angular los revisa todos en cada ciclo, aunque solo 1 haya cambiado.
+Problema: si tienes 100 componentes con Eager, Angular los revisa todos en cada ciclo, aunque solo 1 haya cambiado.
+
+Cuando migramos a Angular 22, `ng update` añadio `ChangeDetectionStrategy.Eager` a `AppComponent` (era el unico sin estrategia) para que se siguiera comportando igual. Lo cambiamos a `OnPush` a mano porque no tiene estado.
 
 ### 2. `ChangeDetectionStrategy.OnPush`
 
@@ -96,14 +105,18 @@ exercises.set([...])
 
 En tu proyecto ya lo usas en todos los componentes — perfecto. La razon:
 
-| | Default | OnPush |
+| | Eager (antes Default) | OnPush |
 |---|---|---|
 | Cuando revisa | Siempre, en cada ciclo | Solo cuando algo relevante cambia |
 | Rendimiento | Lento con muchos componentes | Rapido — solo revisa lo necesario |
 | Con signals | Funciona pero desperdicia checks | Funciona perfectamente |
-| Futuro Angular | Se ira eliminando | Es el camino hacia Zoneless |
+| En Angular 22 | Hay que pedirlo explicitamente | **Es el valor por defecto** |
 
 OnPush + signals es la combinacion ideal: la signal le dice a Angular exactamente cuando revisar, y OnPush asegura que no se revise de mas.
+
+### ¿Sigue haciendo falta escribir `OnPush` en Angular 22?
+
+Tecnicamente no: si no pones `changeDetection`, ya es OnPush. En este proyecto **lo seguimos escribiendo** por convencion (CLAUDE.md) para que se vea de un vistazo y por coherencia con el codigo existente. Es como poner `@Override` en Java: no es obligatorio, pero deja clara la intencion.
 
 ---
 
@@ -151,23 +164,36 @@ setTimeout(() => {
 
 ---
 
-## Zoneless Angular — el futuro sin Zone.js
+## Zoneless Angular — Angular sin Zone.js
 
 ### Que es Zoneless
 
 Es Angular SIN Zone.js. En lugar de parchear APIs del navegador, Angular depende de las **signals** para saber cuando algo cambia.
 
-### Como activar Zoneless (Angular 19+, experimental)
+### Estado de Zoneless por version
+
+| Version | Estado | Provider |
+|---|---|---|
+| Angular 18-19 | Experimental | `provideExperimentalZonelessChangeDetection()` |
+| Angular 20.0 | Developer preview | `provideZonelessChangeDetection()` (renombrado) |
+| Angular 20.2 | **Estable** | `provideZonelessChangeDetection()` |
+| Angular 21+ | **Por defecto en apps nuevas** (`ng new` ya no incluye zone.js) | no hace falta ponerlo |
+
+Las apps que ya existian (como esta) **siguen con Zone.js** hasta que las migres tu: en ellas `provideZoneChangeDetection()` es lo que mantiene Zone.js activo.
+
+### Como activar Zoneless (Angular 20.2+)
 
 ```ts
 // app.config.ts
 export const appConfig: ApplicationConfig = {
   providers: [
-    // provideZoneChangeDetection({ eventCoalescing: true }), // ANTES
-    provideExperimentalZonelessChangeDetection(),              // AHORA
+    // provideZoneChangeDetection({ eventCoalescing: true }), // ANTES (con Zone.js)
+    provideZonelessChangeDetection(),                         // AHORA (sin Zone.js)
   ],
 };
 ```
+
+En Angular 21+ basta con **quitar** `provideZoneChangeDetection()`: sin el, la app ya es zoneless. Poner `provideZonelessChangeDetection()` explicitamente no hace daño y deja la intencion clara.
 
 Y en `angular.json`, puedes quitar zone.js de los polyfills:
 
@@ -176,6 +202,8 @@ Y en `angular.json`, puedes quitar zone.js de los polyfills:
   "polyfills": []    // ya no necesitas "zone.js"
 }
 ```
+
+Y en la configuracion `testing` de `angular.json` (la que usa Vitest) quitar tambien `"zone.js"` y `"zone.js/testing"`. Despues se puede desinstalar el paquete: `npm uninstall zone.js`.
 
 ### Como funciona Zoneless
 
@@ -255,8 +283,10 @@ setTimeout(() => {
 
 ```
 Angular < 16:   Zone.js + Default → revisa todo, siempre
-Angular 16-18:  Zone.js + OnPush + Signals → revisa solo lo marcado
-Angular 19+:    Zoneless + Signals → sin Zone.js, todo via signals
+Angular 16-19:  Zone.js + OnPush + Signals → revisa solo lo marcado (Zoneless experimental)
+Angular 20.2:   Zoneless estable
+Angular 21:     Zoneless por defecto en apps nuevas
+Angular 22:     OnPush por defecto en todos los componentes; Default renombrado a Eager
 ```
 
 Cada paso elimina trabajo innecesario:
@@ -275,9 +305,9 @@ Zoneless + Signals
   Carga: minima (Zone.js eliminado, sin parches)
 ```
 
-### Tu proyecto ya esta preparado
+### Tu proyecto y Zoneless
 
-Tu proyecto ya sigue las practicas correctas para Zoneless:
+**Tu proyecto ya funciona sin Zone.js.** Se pudo migrar porque sigue estas practicas:
 
 ```ts
 // ✓ OnPush en todos los componentes
@@ -293,13 +323,28 @@ dayOfWeek = input.required<string>();
 programId = input.required<number>();
 
 // ✓ Estado compartido con signals en servicios
-@Injectable({ providedIn: 'root' })
+@Service()   // Angular 22 (antes: @Injectable({ providedIn: 'root' }))
 export class CreateRoutineStateService {
   programId = signal<number | null>(null);
 }
 ```
 
-Cuando Zoneless sea estable, solo tendrias que cambiar el provider en `app.config.ts` y quitar zone.js de los polyfills.
+#### Como se hizo la migracion
+
+1. **Auditoria**: buscar estado que se pinte en el template y **no** sea una signal, sobre todo si cambia dentro de `subscribe`, `setTimeout`, `setInterval` o una `Promise`. En este proyecto solo aparecieron dos casos, y los dos eran seguros:
+   - `ToastService` usa `setTimeout` para cerrar el toast, pero lo que cambia es una signal (`_toasts.update(...)`) → la signal avisa a Angular.
+   - `SelectExercisesComponent.prefilled` es una propiedad normal, pero es un flag interno que no sale en el template.
+2. **`app.config.ts`**: `provideZoneChangeDetection({ eventCoalescing: true })` → `provideZonelessChangeDetection()`.
+3. **`angular.json`**: quitar `"zone.js"` de los `polyfills` del build y `"zone.js"` + `"zone.js/testing"` de la configuracion `testing` (Vitest).
+4. **`npm uninstall zone.js`**.
+5. `ng build` + `ng test` + probar la app a mano.
+
+#### Reglas para seguir siendo zoneless
+
+- Todo lo que se muestre en el template tiene que ser una **signal** (o `computed`, `input`, `rxResource`...).
+- Si usas `setTimeout`, `setInterval` o una `Promise`, dentro de ellos **cambia signals**, no propiedades normales.
+- Los formularios reactivos funcionan sin problema cuando cambian por eventos del template (`input`, `blur`, `submit`). Si cambias un formulario por codigo **fuera** de un evento (por ejemplo, en un `setTimeout`), su estado no se repinta solo. Puedes leerlo con signals o, como ultimo recurso, llamar a `ChangeDetectorRef.markForCheck()`.
+- **No vuelvas a instalar librerias que dependan de Zone.js** (algunas librerias antiguas usan `NgZone.onStable` o similares).
 
 ---
 
@@ -370,12 +415,12 @@ Con signals, casi nunca necesitas `markForCheck()` — las signals lo hacen auto
 
 | Concepto | Rol | Futuro |
 |---|---|---|
-| **Zone.js** | Detecta que "algo asincrono paso" | Se eliminara (Zoneless) |
+| **Zone.js** | Detecta que "algo asincrono paso" | Ya no viene en apps nuevas (v21+); opcional |
 | **Change Detection** | Recorre componentes buscando cambios | Seguira existiendo pero mas eficiente |
-| **Default strategy** | Revisa el componente en cada ciclo | No recomendado, se ira eliminando |
-| **OnPush strategy** | Revisa solo cuando hay razon concreta | Estandar actual, compatible con Zoneless |
+| **Eager strategy** (antes Default) | Revisa el componente en cada ciclo | No recomendado, hay que pedirlo explicitamente (v22) |
+| **OnPush strategy** | Revisa solo cuando hay razon concreta | Valor por defecto desde Angular 22 |
 | **Signals** | Notifican exactamente que cambio | El mecanismo principal de reactividad |
-| **Zoneless** | Angular sin Zone.js, solo signals | Experimental en 19, estable pronto |
+| **Zoneless** | Angular sin Zone.js, solo signals | Estable desde 20.2, por defecto en apps nuevas desde 21 |
 
 ### La relacion entre los tres
 

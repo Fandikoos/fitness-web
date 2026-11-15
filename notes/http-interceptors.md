@@ -1,5 +1,9 @@
 # Interceptores HTTP en Angular
 
+> **Revisado para Angular 22.** Los interceptores funcionan exactamente igual. Lo que cambia esta alrededor:
+> - `HttpClient` esta disponible por defecto desde Angular 21, pero **sigue haciendo falta `provideHttpClient()`** para registrar interceptores.
+> - Desde Angular 22, **Fetch es el backend por defecto** y `withFetch()` esta **deprecado** (se puede quitar). Para volver al antiguo `XMLHttpRequest` existe `withXhr()`.
+
 ---
 
 ## Que es un interceptor
@@ -89,13 +93,13 @@ ni de otra lambda que se ejecute mas tarde (para entonces el contexto de inyecci
 En `app.config.ts`:
 
 ```ts
-import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideHttpClient(
-      withFetch(),
+      // withFetch() ya no hace falta en Angular 22: Fetch es el backend por defecto (y withFetch esta deprecado)
       withInterceptors([errorInterceptor]),   // el orden del array importa
     ),
   ],
@@ -103,6 +107,18 @@ export const appConfig: ApplicationConfig = {
 ```
 
 Si no se registra aqui, el interceptor **no se ejecuta nunca**, aunque el fichero exista.
+
+> Aunque desde Angular 21 puedes inyectar `HttpClient` sin llamar a `provideHttpClient()`, los interceptores solo se registran a traves de `provideHttpClient(withInterceptors([...]))`. Si lo quitas, la app sigue haciendo peticiones, pero **sin interceptores**.
+
+### Fetch vs XHR (Angular 22)
+
+| | Fetch (por defecto en v22) | XHR (`withXhr()`) |
+|---|---|---|
+| API del navegador | `fetch()` moderno | `XMLHttpRequest` antiguo |
+| Progreso de subida de ficheros | No soportado | Si |
+| Cuando usarlo | Siempre, salvo que necesites el progreso de subida | Barras de progreso al subir ficheros |
+
+La opcion `reportProgress` de las peticiones esta deprecada; ahora hay `reportUploadProgress` y `reportDownloadProgress`.
 
 ### Funcional vs basado en clases
 
@@ -112,7 +128,7 @@ Si no se registra aqui, el interceptor **no se ejecuta nunca**, aunque el ficher
 | Se registra con `{ provide: HTTP_INTERCEPTORS, useClass: X, multi: true }` | Se registra con `withInterceptors([x])` |
 | `next.handle(req)` | `next(req)` |
 
-En Angular 19 usamos **siempre el funcional**. Si ves `HTTP_INTERCEPTORS` en un import, es del estilo antiguo y sobra.
+En Angular moderno (19, 22...) usamos **siempre el funcional**. Si ves `HTTP_INTERCEPTORS` en un import, es del estilo antiguo y sobra.
 
 ---
 
@@ -167,7 +183,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
 function extractMessage(error: HttpErrorResponse): string {
   if (error.status === 0) {
-    return 'Cannot connect to the server. Please try again later.';
+    return 'No se puede conectar con el servidor. Inténtalo de nuevo más tarde.';
   }
 
   const body = error.error as ErrorResponse | null;
@@ -175,7 +191,7 @@ function extractMessage(error: HttpErrorResponse): string {
   if (body?.errors?.length) {
     return `${body.message}: ${body.errors.join(', ')}`;
   }
-  return body?.message ?? 'Unexpected error. Please try again.';
+  return body?.message ?? 'Error inesperado. Inténtalo de nuevo.';
 }
 ```
 
@@ -196,7 +212,7 @@ El interceptor ya muestra el error, asi que el componente **solo gestiona el exi
 private toastService = inject(ToastService);
 
 this.routineService.create(routine).subscribe({
-  next: () => this.toastService.success('Routine created successfully!'),
+  next: () => this.toastService.success('¡Rutina creada correctamente!'),
   error: (error) => console.error('Error saving routine:', error), // el toast lo pone el interceptor
 });
 ```

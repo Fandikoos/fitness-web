@@ -2,6 +2,12 @@
 
 Este es probablemente el concepto mas importante de entender bien con signals. La diferencia entre `computed()` y `effect()` define como se estructura la logica reactiva en Angular.
 
+> **Actualizado a Angular 22.** Cambios respecto a Angular 19:
+> - `effect()` y `linkedSignal()` son **estables** desde Angular 20.
+> - Escribir signals dentro de un `effect()` **esta permitido por defecto** desde Angular 19. La opcion `allowSignalWrites` esta **deprecada** y no hace nada: no la uses.
+> - Los effects **no se ejecutan de forma sincrona**: Angular los agenda y los ejecuta en el siguiente ciclo (los de componente, durante el change detection).
+> - Para cargar datos cuando cambia una signal, usa `rxResource()` en vez de `effect()` + `subscribe()` (ver [rxresource-pattern.md](rxresource-pattern.md)).
+
 ---
 
 ## computed() — Datos que se calculan solos
@@ -153,31 +159,36 @@ const count = signal(0);
 
 effect(() => {
   console.log('Count is now:', count());
-  // Se ejecuta inmediatamente: "Count is now: 0"
-  // Y cada vez que count cambie
+  // Se ejecuta una primera vez poco despues de crearse: "Count is now: 0"
+  // Y despues cada vez que count cambie
 });
 
-count.set(1);  // "Count is now: 1"
-count.set(2);  // "Count is now: 2"
+count.set(1);  // agenda el effect → "Count is now: 1" (en el siguiente ciclo)
 ```
 
 ### Caracteristicas clave de effect
 
-#### 1. Es eager (ansioso) — se ejecuta inmediatamente y ante cada cambio
+#### 1. Es eager (ansioso) — siempre se ejecuta, aunque nadie lea nada
 
-A diferencia de `computed()` que es lazy, `effect()` se ejecuta:
-- Una vez al crearse (para establecer las dependencias iniciales)
+A diferencia de `computed()` que es lazy (solo calcula si alguien lo lee), `effect()` se ejecuta siempre:
+- Una vez al crearse (para descubrir sus dependencias)
 - Cada vez que una dependencia cambia
+
+Pero **no es sincrono**: cuando una signal cambia, Angular *agenda* el effect y lo ejecuta un poco despues (los effects de componente, durante el change detection). Si cambias la signal varias veces seguidas, el effect solo ve el ultimo valor:
 
 ```ts
 const name = signal('Push-ups');
 
 effect(() => {
-  console.log(name());  // Se ejecuta AHORA: "Push-ups"
+  console.log(name());  // primera ejecucion (agendada): "Push-ups"
 });
 
-name.set('Squats');     // Se ejecuta de nuevo: "Squats"
+name.set('Squats');
+name.set('Lunges');     // el effect se ejecuta UNA vez y muestra "Lunges"
+                        // nunca llega a ver "Squats"
 ```
+
+Analogia Java: no es un listener que se llama dentro del `set()` (como `PropertyChangeListener`). Se parece mas a un `SwingUtilities.invokeLater()`: el aviso se encola y se procesa despues.
 
 #### 2. No devuelve un valor — es void
 
@@ -351,12 +362,20 @@ effect(() => {
 });
 
 // Llamar a una API externa cuando cambia un filtro
+// ⚠️ Funciona, pero desde Angular 19 lo correcto es rxResource (ver rxresource-pattern.md):
+// el effect no cancela la peticion anterior ni te da loading/error
 effect(() => {
   const category = this.selectedCategory();
   // cada vez que cambie la categoria, recargar ejercicios
   this.exerciseService.getByCategory(category).subscribe(data => {
     this.exercises.set(data);
   });
+});
+
+// MEJOR — rxResource hace lo mismo, cancela peticiones viejas y expone isLoading()/error()
+exercisesResource = rxResource({
+  params: () => this.selectedCategory(),
+  stream: ({ params: category }) => this.exerciseService.getByCategory(category),
 });
 
 // Sincronizar titulo de la pagina
@@ -381,7 +400,7 @@ effect(() => {
 | **Proposito** | Derivar un nuevo valor | Ejecutar un efecto secundario |
 | **Devuelve** | `Signal<T>` (un valor) | `EffectRef` (void, no un valor) |
 | **Lectura/escritura** | Solo lectura | No aplica (no es una signal) |
-| **Cuando se ejecuta** | Lazy — solo cuando alguien lo lee | Eager — inmediatamente y en cada cambio |
+| **Cuando se ejecuta** | Lazy — solo cuando alguien lo lee | Eager — siempre, agendado tras cada cambio |
 | **Memoizado** | Si — cachea el resultado | No aplica |
 | **Puro** | DEBE ser puro (sin side effects) | Es PARA side effects |
 | **Ejemplo mental** | Celda de Excel que calcula | Un trigger de base de datos |
@@ -519,32 +538,33 @@ sortBy ──────────────────────┘
 
 Cada computed solo se recalcula si sus dependencias directas cambian. Si cambias `sortBy`, solo `sorted` se recalcula — `filtered` y `stats` no se tocan porque no dependen de `sortBy`.
 
-### effect con allowSignalWrites
+### Escribir signals dentro de un effect (y por que `allowSignalWrites` sobra)
 
-Por defecto, no puedes escribir signals dentro de un effect (para evitar ciclos infinitos). Si realmente necesitas hacerlo:
+Hasta Angular 18, escribir una signal dentro de un effect daba error salvo que pasaras `{ allowSignalWrites: true }`. **Desde Angular 19 esta permitido por defecto** y esa opcion esta deprecada (no hace nada). Si la ves en codigo o tutoriales antiguos, simplemente quitala:
 
 ```ts
-// Angular lanza un error por defecto
+// Angular 18 y anteriores: daba error sin la opcion
+// Angular 19+: funciona tal cual
 effect(() => {
-  this.otherSignal.set(this.count() * 2);  // ERROR
+  this.otherSignal.set(this.count() * 2);
 });
 
-// Para permitirlo explicitamente:
+// ❌ Codigo antiguo — la opcion sobra (deprecada)
 effect(() => {
   this.otherSignal.set(this.count() * 2);
 }, { allowSignalWrites: true });
 ```
 
-Pero si necesitas `allowSignalWrites`, casi seguro que deberias usar `computed()` en su lugar. Es una senal de alarma de que estas usando effect para derivar datos.
+Que este permitido **no significa que sea buena idea**. El ejemplo de arriba es justo el anti-patron: `otherSignal` deberia ser un `computed()`. Escribir signals en un effect sigue siendo una senal de alarma de que estas usando effect para derivar datos.
 
 Las excepciones validas son pocas:
 - Resetear un formulario cuando cambia una condicion
 - Sincronizar estado legacy (BehaviorSubject ↔ signal)
-- Logging + actualizar un contador de logs
+- Pre-rellenar un formulario/estado cuando llegan datos asincronos (como en `SelectExercisesComponent`)
 
-### linkedSignal() — la alternativa a effect + allowSignalWrites
+### linkedSignal() — la alternativa a escribir signals desde un effect
 
-Angular 19 introdujo `linkedSignal()` para el caso especifico donde necesitas una signal escribible cuyo valor inicial depende de otra signal:
+Angular 19 introdujo `linkedSignal()` (estable desde Angular 20) para el caso especifico donde necesitas una signal escribible cuyo valor inicial depende de otra signal:
 
 ```ts
 import { linkedSignal } from '@angular/core';
@@ -566,7 +586,7 @@ this.categories.set(['Arms', 'Core']);
 console.log(this.selectedCategory());  // "Arms" — se reseteo
 ```
 
-Sin `linkedSignal`, tendrias que usar effect + allowSignalWrites:
+Sin `linkedSignal`, tendrias que escribir la signal desde un effect:
 
 ```ts
 // MAL — la forma vieja de hacerlo
@@ -575,8 +595,23 @@ selectedCategory = signal('');
 constructor() {
   effect(() => {
     this.selectedCategory.set(this.categories()[0]);
-  }, { allowSignalWrites: true });
+  });
 }
+```
+
+Ademas de ser mas codigo, con el effect hay un momento en el que `selectedCategory` tiene el valor viejo (el effect se ejecuta despues). `linkedSignal` se recalcula en el momento en que lo lees, como un `computed`.
+
+#### Forma larga: conservar la seleccion si sigue siendo valida
+
+`linkedSignal` tambien acepta un objeto con `source` y `computation`, que recibe el valor anterior:
+
+```ts
+selectedCategory = linkedSignal({
+  source: this.categories,
+  computation: (categories, previous) =>
+    // si la categoria que habia elegido el usuario sigue existiendo, la mantengo
+    previous && categories.includes(previous.value) ? previous.value : categories[0],
+});
 ```
 
 `linkedSignal` es la solucion oficial para este patron. Usalo cuando necesitas un valor que:

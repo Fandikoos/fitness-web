@@ -1,12 +1,10 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import { ProgramRequest, ProgramResponse } from '../../shared/interfaces/program.interface';
 import { catchError, delay, Observable, of, shareReplay, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class ProgramService {
 
   private http = inject(HttpClient);
