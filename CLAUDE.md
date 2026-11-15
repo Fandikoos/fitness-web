@@ -10,7 +10,7 @@ Fitness-web is a gym workout routine management app built with Angular 22 as a l
 
 - **Dev server:** `ng serve` (http://localhost:4200, auto-reloads)
 - **Build:** `ng build` (production by default, output in `dist/fitness-web/`)
-- **Tests:** `ng test` (Karma + Jasmine)
+- **Tests:** `ng test` (Vitest + jsdom; `ng test --watch=false` for a single run)
 - **Generate component:** `ng g c features/<feature>/<component-name> --flat` (standalone by default; `angular.json` schematics keep the `.component.ts` suffix)
 - **Generate service:** `ng g s core/services/<service-name>`
 
