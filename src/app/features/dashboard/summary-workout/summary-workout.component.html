@@ -105,7 +105,12 @@
           </div>
         </div>
 
-        <button type="button" class="btn btn-primary btn-lg w-full rounded-xl mt-2">
+        <!-- Es navegación, no una acción: <a> con routerLink (se ve igual con btn) -->
+        <a
+          class="btn btn-primary btn-lg w-full rounded-xl mt-2"
+          routerLink="/workout-sessions/new"
+          [queryParams]="{ routineId: routine.id }"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -119,7 +124,7 @@
             <path d="M7 4.5v15l12-7.5z" />
           </svg>
           Empezar rutina
-        </button>
+        </a>
       </div>
     </aside>
   </section>

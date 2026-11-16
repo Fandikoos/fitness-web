@@ -2,13 +2,15 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { RoutineResponse } from '../../../shared/interfaces/routine.interface';
 import { MuscleGroupLabelPipe } from '../../../shared/pipes/muscle-group-label.pipe';
 import { DayLabelPipe } from '../../../shared/pipes/day-label.pipe';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-summary-workout',
   imports: [
     MuscleGroupLabelPipe,
-    DayLabelPipe
-  ],
+    DayLabelPipe,
+    RouterLink
+],
   templateUrl: './summary-workout.component.html',
   styleUrl: './summary-workout.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

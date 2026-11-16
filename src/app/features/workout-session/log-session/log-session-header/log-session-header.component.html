@@ -1,0 +1,51 @@
+<!-- sticky: se queda fijo arriba al hacer scroll por los ejercicios -->
+<header
+  class="sticky top-0 z-10 border-b border-base-300 bg-base-100/95 backdrop-blur"
+>
+  <div class="page-container flex flex-wrap items-center gap-x-6 gap-y-3 py-4">
+    <!-- Salir -->
+    <button type="button" class="btn btn-outline btn-sm" (click)="exit.emit()">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        class="size-4"
+        aria-hidden="true"
+      >
+        <path d="M18 6 6 18M6 6l12 12" />
+      </svg>
+      Salir
+    </button>
+
+    <!-- Nombre de la rutina: flex-1 ocupa el hueco libre y truncate corta con "…" si no cabe -->
+    <h1 class="min-w-0 flex-1 truncate text-lg font-bold">
+      {{ routineName() }}
+    </h1>
+
+    <!-- Progreso: en móvil baja a su propia fila (order-last + w-full) -->
+    <div class="order-last flex w-full flex-col gap-1.5 sm:order-0 sm:w-56">
+      <div class="flex justify-between text-xs">
+        <span class="font-medium">
+          {{ completedExercises() }} de {{ totalExercises() }} ejercicios
+        </span>
+        <span class="text-base-content/60">
+          {{ completedSets() }} / {{ totalSets() }} series
+        </span>
+      </div>
+      <progress
+        class="progress progress-primary h-1.5"
+        [value]="completedSets()"
+        [max]="totalSets()"
+        aria-label="Series completadas"
+      ></progress>
+    </div>
+
+    <button type="button" class="btn btn-primary" (click)="finish.emit()">
+      <span class="sm:hidden">Finalizar</span>
+      <span class="hidden sm:inline">Finalizar entrenamiento</span>
+    </button>
+  </div>
+</header>

@@ -31,7 +31,7 @@ export class Step2RoutineComponent implements OnInit {
   ngOnInit(): void {
     const id = this.programId();
     if (id === null) {
-      this.router.navigate(['/create/step-1']);
+      this.router.navigate(['/routines/create/step-1']);
       return;
     }
 
@@ -39,7 +39,7 @@ export class Step2RoutineComponent implements OnInit {
   }
 
   onBack(): void {
-    this.router.navigate(['/create/step-1']);
+    this.router.navigate(['/routines/create/step-1']);
   }
 
   onCancel(): void {

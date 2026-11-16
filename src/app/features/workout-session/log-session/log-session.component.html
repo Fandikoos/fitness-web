@@ -1,0 +1,49 @@
+@if (routineResource.isLoading()) {
+  <!-- Carga -->
+  <div class="flex justify-center py-16">
+    <span class="loading loading-spinner loading-lg"></span>
+  </div>
+} @else if (routine(); as routine) {
+  <app-log-session-header
+    [routineName]="routine.name"
+    [completedExercises]="0"
+    [totalExercises]="totalExercises()"
+    [completedSets]="0"
+    [totalSets]="totalSets()"
+    (exit)="exit()"
+    (finish)="finish()"
+  />
+
+  <div
+    class="page-container grid gap-6 py-8 lg:grid-cols-[18rem_1fr] lg:items-start"
+  >
+    <!-- Columna izquierda: sticky para que la lista acompañe al hacer scroll -->
+    <aside class="min-w-0 lg:sticky lg:top-24">
+      <app-log-session-list-exercises
+        [exercises]="exercisesProgress()"
+        [selectedIndex]="selectedIndex()"
+        (selectExercise)="selectedIndex.set($event)"
+      />
+    </aside>
+
+    <section class="min-w-0">
+      <app-log-session-exercise />
+    </section>
+  </div>
+} @else {
+  <!-- Error: el interceptor ya muestra el toast -->
+  <div class="page-container py-8">
+    <div class="card border border-base-300 bg-base-200">
+      <div class="card-body items-center text-center">
+        <h2 class="card-title">No se ha podido cargar la rutina</h2>
+        <button
+          type="button"
+          class="btn btn-primary mt-2"
+          (click)="routineResource.reload()"
+        >
+          Reintentar
+        </button>
+      </div>
+    </div>
+  </div>
+}

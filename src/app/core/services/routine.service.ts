@@ -27,4 +27,8 @@ export class RoutineService {
     );
   }
 
+  getById(routineId: number): Observable<RoutineResponse> {
+    return this.http.get<RoutineResponse>(`${this.url}/${routineId}`);
+  }
+
 }

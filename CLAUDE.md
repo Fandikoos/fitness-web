@@ -25,8 +25,9 @@ src/app/
 │   ├── dashboard/      # Home page (calendar + summary-workout)
 │   ├── exercise/       # list-exercises (modal picker), select-exercises
 │   ├── program/        # list-programs
+│   ├── workout-session/ # log-session (/workout-sessions/new?routineId=X)
 │   └── routine/
-│       ├── routine.routes.ts   # Child routes for ALL pages (default array export)
+│       ├── routine.routes.ts   # Child routes of /routines (default array export)
 │       └── create/             # 2-step routine creation wizard (step-1, step-2)
 ├── shared/
 │   ├── components/     # confirm-dialog, navbar, pagination, toast-response
@@ -34,10 +35,10 @@ src/app/
 │   ├── pipes/          # dayLabel, muscleGroupLabel (enum → Spanish label)
 │   └── utils/          # { label, value } lists for backend enums
 ├── app.config.ts       # Providers: zoneless CD, LOCALE_ID es-ES, router, HttpClient + interceptors
-└── app.routes.ts       # Root routes — lazy-loads features/routine/routine.routes.ts
+└── app.routes.ts       # Root routes — one URL prefix per feature (loadChildren)
 ```
 
-**Routing pattern:** Root routes in `app.routes.ts` use `loadChildren` pointing to `features/routine/routine.routes.ts`, which `export default`s a `Routes` array. Each page uses `loadComponent`.
+**Routing pattern:** Root routes in `app.routes.ts` map a URL prefix to a feature with `loadChildren`; each feature has its own `<feature>.routes.ts` that `export default`s a `Routes` array, and each page uses `loadComponent`. `''` → dashboard (single page, `loadComponent` directly); `programs` → `program.routes.ts`; `routines` → `routine.routes.ts` (wizard at `/routines/create/step-1|2`); `workout-sessions` → `workout-session.routes.ts`. New features add their own prefix in `app.routes.ts`. `withComponentInputBinding()` is enabled, so route/query params arrive as `input()`s (use `transform: numberAttribute` for ids).
 
 **State management:** Use Angular signals for component and service state — no NgRx or external state library. Services in `core/services/` are root singletons declared with **`@Service()`** (Angular 22, equivalent to `@Injectable({ providedIn: 'root' })`). `@Service()` requires `inject()` — no constructor injection.
 
