@@ -6,10 +6,11 @@
 } @else if (routine(); as routine) {
   <app-log-session-header
     [routineName]="routine.name"
-    [completedExercises]="0"
+    [completedExercises]="completedExercises()"
     [totalExercises]="totalExercises()"
-    [completedSets]="0"
+    [completedSets]="completedSets()"
     [totalSets]="totalSets()"
+    [saving]="saving()"
     (exit)="exit()"
     (finish)="finish()"
   />
@@ -26,8 +27,32 @@
       />
     </aside>
 
-    <section class="min-w-0">
-      <app-log-session-exercise />
+    <section class="flex min-w-0 flex-col gap-6">
+      <!-- Ejercicio actual: recibe SU FormGroup; lo que escriba modifica el formulario del padre -->
+      @if (selectedExercise(); as exercise) {
+        <app-log-session-exercise
+          [routineExercise]="exercise"
+          [exerciseForm]="selectedExerciseForm()"
+          [lastTime]="selectedLastTime()"
+          [lastSessionDate]="workoutSession()?.sessionDate ?? null"
+          [previousName]="previousExerciseName()"
+          [nextName]="nextExerciseName()"
+          (previous)="selectedIndex.update((i) => i - 1)"
+          (next)="selectedIndex.update((i) => i + 1)"
+        />
+      }
+
+      <!-- Notas de la sesión: control directo del formulario raíz -->
+      <fieldset class="fieldset">
+        <legend class="fieldset-legend">Notas de la sesión</legend>
+        <textarea
+          [formControl]="sessionForm().controls.notes"
+          maxlength="500"
+          rows="3"
+          placeholder="¿Qué tal ha ido hoy?"
+          class="textarea w-full"
+        ></textarea>
+      </fieldset>
     </section>
   </div>
 } @else {
@@ -47,3 +72,13 @@
     </div>
   </div>
 }
+
+<!-- Fuera de los @if para que viewChild.required lo encuentre siempre -->
+<app-confirm-dialog
+  #exitDialog
+  title="¿Salir sin guardar?"
+  message="Perderás las series y notas que has registrado en esta sesión."
+  [canDelete]="true"
+  confirmLabel="Salir sin guardar"
+  (confirmed)="leave()"
+/>

@@ -19,6 +19,9 @@ export class LogSessionHeaderComponent {
   completedSets = input.required<number>();
   totalSets = input.required<number>();
 
+  // true mientras se guarda la sesión
+  saving = input(false);
+
   // El padre decide qué hacer: navegar, pedir confirmación, guardar...
   exit = output<void>();
   finish = output<void>();
