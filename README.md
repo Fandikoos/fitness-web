@@ -1,59 +1,95 @@
-# FitnessWeb
+# Fitness Web
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.1.4.
+Aplicación web para gestionar rutinas de gimnasio y registrar entrenamientos. Es el frontend de **Fitness App** y un proyecto de aprendizaje de Angular moderno: signals, componentes standalone, detección de cambios sin Zone.js (zoneless), carga diferida (lazy loading) y la nueva sintaxis de control de flujo (`@if`, `@for`, `@switch`).
 
-## Development server
+## Funcionalidades
 
-To start a local development server, run:
+- **Inicio (dashboard)**: la rutina de hoy, con su lista de ejercicios, y un resumen de la semana en curso:
+  - sesiones hechas sobre las planificadas, series y volumen total (Σ kg × repeticiones);
+  - una tira de lunes a domingo con los días entrenados, no entrenados, de hoy, planificados y de descanso;
+  - la última sesión registrada y los días que quedan de la semana.
+- **Programas**: listar, crear, editar, activar y eliminar programas de entrenamiento.
+- **Rutinas**: un asistente de dos pasos para crear o editar la rutina de un día (datos básicos y luego ejercicios con sus series).
+- **Ejercicios**: un catálogo con selector modal, filtro por grupo muscular y paginación.
+- **Registrar sesión**: anotar las series realmente hechas (peso, repeticiones, RPE) a partir de la rutina del día.
+- **Errores**: un interceptor HTTP los muestra como avisos (toasts).
 
-```bash
-ng serve
-```
+Toda la interfaz está en español (es-ES).
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Tecnologías
 
-## Code scaffolding
+|           |                                                                                |
+| --------- | ------------------------------------------------------------------------------ |
+| Framework | Angular 22 (standalone, zoneless, signals, `rxResource`)                       |
+| Lenguaje  | TypeScript 6.0 (modo `strict`)                                                 |
+| Estilos   | Tailwind CSS v4 + DaisyUI v5                                                   |
+| Tests     | Vitest + jsdom                                                                 |
+| Backend   | [`fitness-api`](../fitness-api), microservicio `workout-service` (Spring Boot) |
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Requisitos
 
-```bash
-ng generate component component-name
-```
+- Node.js ≥ 22.22 o ≥ 24.13 (el proyecto se desarrolla con Node 26)
+- El backend `workout-service` arrancado en `http://localhost:8080`. La URL base está en [src/environments/environment.ts](src/environments/environment.ts).
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+## Puesta en marcha
 
 ```bash
-ng test
+npm install
+npm start          # = ng serve → http://localhost:4200 (se recarga sola)
 ```
 
-## Running end-to-end tests
+## Comandos
 
-For end-to-end (e2e) testing, run:
+| Comando                                         | Qué hace                                                           |
+| ----------------------------------------------- | ------------------------------------------------------------------ |
+| `ng serve`                                      | Servidor de desarrollo en `http://localhost:4200`                  |
+| `ng build`                                      | Build de producción en `dist/fitness-web/`                         |
+| `ng build --watch --configuration development`  | Build de desarrollo que se regenera al guardar (`npm run watch`)   |
+| `ng test`                                       | Tests con Vitest (`ng test --watch=false` para una sola ejecución) |
+| `ng g c features/<feature>/<componente> --flat` | Generar un componente                                              |
+| `ng g s core/services/<servicio>`               | Generar un servicio (`@Service()`)                                 |
 
-```bash
-ng e2e
+## Estructura
+
+```
+src/app/
+├── core/
+│   ├── interceptors/    # errorInterceptor → muestra los errores HTTP como toast
+│   └── services/        # Servicios singleton (programas, rutinas, ejercicios, sesiones, toasts…)
+├── features/            # Una carpeta por funcionalidad; las páginas se cargan con lazy loading
+│   ├── dashboard/       # Inicio: tarjeta de hoy, resumen semanal, última sesión, próximos días
+│   ├── exercise/        # Selector y listado de ejercicios
+│   ├── program/         # Listado de programas
+│   ├── routine/         # Asistente de creación de rutinas (paso 1 y 2)
+│   └── workout-session/ # Registrar una sesión (/workout-sessions/new?routineId=X)
+├── shared/
+│   ├── components/      # navbar, confirm-dialog, pagination, toast-response
+│   ├── interfaces/      # DTOs que reflejan las respuestas del backend
+│   ├── pipes/           # dayLabel, muscleGroupLabel, volume
+│   └── utils/           # Listas { label, value } de enums y utilidades de fechas
+├── app.config.ts        # Providers: zoneless, LOCALE_ID es-ES, router, HttpClient + interceptores
+└── app.routes.ts        # Rutas raíz: un prefijo de URL por funcionalidad
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+### Rutas
 
-## Additional Resources
+| URL                                                  | Pantalla                                           |
+| ---------------------------------------------------- | -------------------------------------------------- |
+| `/`                                                  | Inicio (dashboard)                                 |
+| `/programs`                                          | Programas                                          |
+| `/routines/create/step-1`, `/routines/create/step-2` | Asistente de rutinas                               |
+| `/workout-sessions/new?routineId=X`                  | Registrar sesión (a pantalla completa, sin navbar) |
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## Convenciones
+
+Las convenciones del proyecto están en [CLAUDE.md](CLAUDE.md). Las principales:
+
+- Estado con **signals** (`signal`, `computed`, `linkedSignal`, `input`, `model`); nada de NgRx ni BehaviorSubject.
+- **Peticiones**: `rxResource` para las GET que se pintan en pantalla y `.subscribe()` para las POST, PUT y DELETE.
+- **Change detection**: `ChangeDetectionStrategy.OnPush` en todos los componentes, y sin Zone.js.
+- **Textos**: la interfaz y los comentarios del código en español; los identificadores, en inglés.
+- **Enums del backend** (`MONDAY`, `CHEST`…): no se traducen; se muestran con un par `{ label, value }`.
+
+## Notas de aprendizaje
+
+En [notes/](notes/) hay apuntes en español sobre los conceptos de Angular que usa el proyecto: signals, `rxResource`, interceptores, formularios reactivos, modales, zoneless… [notes/angular-22-novedades.md](notes/angular-22-novedades.md) resume lo que cambió de Angular 19 a 22.
