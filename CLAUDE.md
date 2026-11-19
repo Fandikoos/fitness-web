@@ -22,7 +22,7 @@ src/app/
 │   ├── interceptors/   # Functional HTTP interceptors (errorInterceptor → toast)
 │   └── services/       # Root singletons: Routine/Exercise/Program/Toast services, CreateRoutineStateService
 ├── features/           # One folder per feature; pages are lazy-loaded with loadComponent
-│   ├── dashboard/      # Home page (calendar + summary-workout)
+│   ├── dashboard/      # Home: today card, week stats/strip, last session, coming up (week-summary.ts = pure calcs)
 │   ├── exercise/       # list-exercises (modal picker), select-exercises
 │   ├── program/        # list-programs
 │   ├── workout-session/ # log-session (/workout-sessions/new?routineId=X)
@@ -32,8 +32,8 @@ src/app/
 ├── shared/
 │   ├── components/     # confirm-dialog, navbar, pagination, toast-response
 │   ├── interfaces/     # DTOs mirroring the backend (ErrorResponse, PageResponse…)
-│   ├── pipes/          # dayLabel, muscleGroupLabel (enum → Spanish label)
-│   └── utils/          # { label, value } lists for backend enums
+│   ├── pipes/          # dayLabel, muscleGroupLabel (enum → Spanish label), volume (kg → "9,6 t")
+│   └── utils/          # { label, value } lists for backend enums; dates.ts (LocalDate ↔ Date without TZ shifts, ISO week)
 ├── app.config.ts       # Providers: zoneless CD, LOCALE_ID es-ES, router, HttpClient + interceptors
 └── app.routes.ts       # Root routes — one URL prefix per feature (loadChildren)
 ```

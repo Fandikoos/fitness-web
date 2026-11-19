@@ -19,4 +19,12 @@ export class WorkoutSessionService {
     return this.http.get<WorkoutSessionResponse | null>(`${this.url}/routines/${routineId}/latest`);
   }
 
+  // Fechas en formato "yyyy-MM-dd" (ambas incluidas). El backend las devuelve
+  // ordenadas de la más reciente a la más antigua.
+  getBetweenDates(start: string, end: string): Observable<WorkoutSessionResponse[]> {
+    return this.http.get<WorkoutSessionResponse[]>(`${this.url}/between-dates`, {
+      params: { start, end },
+    });
+  }
+
 }
