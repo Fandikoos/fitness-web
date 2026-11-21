@@ -1,7 +1,7 @@
 import { ApplicationConfig, LOCALE_ID, provideZonelessChangeDetection } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import localeEs from '@angular/common/locales/es';
-import { provideRouter, withViewTransitions } from '@angular/router';
+import { provideRouter, withComponentInputBinding, withViewTransitions } from '@angular/router';
 
 import { routes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
@@ -17,7 +17,9 @@ export const appConfig: ApplicationConfig = {
     // pero lo dejamos explícito para que se vea la intención.
     provideZonelessChangeDetection(),
     { provide: LOCALE_ID, useValue: 'es-ES' },
-    provideRouter(routes, withViewTransitions()),
+    // withComponentInputBinding: los params, query params y data de la ruta
+    // llegan a los input() del componente que tengan el mismo nombre.
+    provideRouter(routes, withViewTransitions(), withComponentInputBinding()),
     // Aquí se registran los interceptores.
     provideHttpClient(
       withInterceptors([errorInterceptor])

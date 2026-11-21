@@ -43,7 +43,7 @@ export class ListProgramComponent {
 
   startNewProgram(): void {
     this.createRoutineState.reset();
-    this.router.navigate(['/create/step-1']);
+    this.router.navigate(['/routines/create/step-1']);
   }
 
   editProgram(idProgram: number) {
@@ -52,7 +52,7 @@ export class ListProgramComponent {
     }
 
     this.createRoutineState.programId.set(idProgram);
-    this.router.navigate(['/create/step-2']);
+    this.router.navigate(['/routines/create/step-2']);
   }
 
   prepareDeleteProgram(program: ProgramResponse) {

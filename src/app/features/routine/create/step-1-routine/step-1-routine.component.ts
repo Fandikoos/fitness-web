@@ -69,7 +69,7 @@ export class Step1RoutineComponent implements OnInit {
       this.programService.createProgram(programRequest).subscribe({
         next: (response) => {
           this.createRoutineState.programId.set(response.id);
-          this.router.navigate(['/create/step-2']);
+          this.router.navigate(['/routines/create/step-2']);
         },
         error: (error) => {
           console.error('Error creating program:', error);
@@ -78,7 +78,7 @@ export class Step1RoutineComponent implements OnInit {
     } else {
       this.programService.updateProgram(idProgram, programRequest).subscribe({
         next: (response) => {
-          this.router.navigate(['/create/step-2']);
+          this.router.navigate(['/routines/create/step-2']);
         },
         error: (error) => {
           console.error('Error updating program:', error);

@@ -1,0 +1,73 @@
+@if (routine(); as routine) {
+  <section
+    class="card h-full border border-base-300 bg-base-200 shadow-lg"
+    aria-label="Rutina de hoy"
+  >
+    <div class="card-body flex-col gap-5 sm:flex-row sm:items-center sm:gap-8">
+      <!-- Datos de la rutina -->
+      <div class="flex min-w-0 flex-1 flex-col gap-2">
+        <p class="text-xs font-bold uppercase tracking-wider text-primary">
+          {{ routine.dayOfWeek | dayLabel }} · Hoy
+        </p>
+        <h2 class="text-2xl font-bold leading-tight">{{ routine.name }}</h2>
+        <p class="text-sm text-base-content/60">
+          {{ routine.exercises.length }}
+          {{ routine.exercises.length === 1 ? "ejercicio" : "ejercicios" }} ·
+          {{ totalSets() }} {{ totalSets() === 1 ? "serie" : "series" }}
+          @if (lastDone(); as lastDone) {
+            · última vez el {{ lastDone | date: "EEE d MMM" }}
+          } @else if (lastDoneDate() === null) {
+            · aún no la has hecho
+          }
+        </p>
+      </div>
+
+      <!-- Acciones -->
+      <div class="flex flex-col gap-2 sm:w-60">
+        <!-- Es navegación, no una acción: <a> con routerLink (se ve igual con btn) -->
+        <a
+          class="btn btn-primary btn-lg rounded-xl"
+          routerLink="/workout-sessions/new"
+          [queryParams]="{ routineId: routine.id }"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linejoin="round"
+            class="size-5"
+            aria-hidden="true"
+          >
+            <path d="M7 4.5v15l12-7.5z" />
+          </svg>
+          Empezar rutina
+        </a>
+        <button
+          type="button"
+          class="btn btn-outline rounded-xl"
+          aria-controls="today-exercises"
+          [attr.aria-expanded]="exercisesVisible()"
+          (click)="toggleExercises()"
+        >
+          {{ exercisesVisible() ? "Ocultar ejercicios" : "Ver ejercicios" }}
+        </button>
+      </div>
+    </div>
+  </section>
+} @else {
+  <!-- Día de descanso -->
+  <section
+    class="card h-full border border-base-300 bg-base-200"
+    aria-label="Rutina de hoy"
+  >
+    <div class="card-body justify-center gap-2">
+      <p class="text-xs font-bold uppercase tracking-wider text-primary">Hoy</p>
+      <h2 class="text-2xl font-bold">Día de descanso</h2>
+      <p class="text-sm text-base-content/60">
+        Hoy no tienes ninguna rutina programada. ¡Recupera fuerzas!
+      </p>
+    </div>
+  </section>
+}

@@ -1,3 +1,5 @@
-<app-navbar />
+@if (!hideNavbar()) {
+  <app-navbar />
+}
 <router-outlet />
 <app-toast-response />

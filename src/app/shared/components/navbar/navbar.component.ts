@@ -27,6 +27,6 @@ export class NavbarComponent {
 
   startNewProgram(): void {
     this.createRoutineState.reset();
-    this.router.navigate(['/create/step-1']);
+    this.router.navigate(['/routines/create/step-1']);
   }
 }

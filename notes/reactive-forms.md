@@ -300,6 +300,189 @@ removeExercise(index: number): void {
 
 ---
 
+## FormArray anidado: caso real (registrar sesion)
+
+Codigo en `features/workout-session/log-session/`. El formulario tiene **listas dentro de listas**: una sesion tiene N ejercicios y cada ejercicio tiene N series. Es la misma forma que el DTO `WorkoutSessionRequest`.
+
+### Analogia con Java
+
+| Angular | Java |
+|---|---|
+| `FormControl` | un atributo de un POJO (con validacion) |
+| `FormGroup` | un POJO / `Map<String, Control>` (campos con nombre fijo) |
+| `FormArray` | un `List<Control>` (longitud variable) |
+
+### 1. El arbol
+
+```
+sessionForm (FormGroup)              → WorkoutSessionRequest
+├── notes (FormControl)
+└── exercises (FormArray)            → List<LoggedExerciseRequest>
+    └── [i] FormGroup
+        ├── exerciseTemplateId
+        ├── notes
+        └── sets (FormArray)         → List<LoggedSetRequest>
+            └── [j] FormGroup
+                ├── weightKg, reps, rpe
+                └── done             ← solo UI, no se envia
+```
+
+`numberSet` y `orderInSession` **no son controles**: salen de la posicion en el `FormArray` al construir el request. Asi no se descuadran nunca.
+
+### 2. Tipar el formulario
+
+Para pasar un trozo del formulario a un componente hijo hace falta poder nombrar su tipo (`log-session.form.ts`):
+
+```ts
+export type LoggedSetForm = FormGroup<{
+  weightKg: FormControl<number>;
+  reps: FormControl<number>;
+  rpe: FormControl<number | null>;
+  done: FormControl<boolean>;
+}>;
+
+export type LoggedExerciseForm = FormGroup<{
+  exerciseTemplateId: FormControl<number>;
+  notes: FormControl<string>;
+  sets: FormArray<LoggedSetForm>;
+}>;
+```
+
+### 3. Construirlo a partir de datos (con `map`)
+
+No se escribe a mano: se recorre lo planificado y por cada elemento se crea un grupo. Un metodo por nivel:
+
+```ts
+private buildSessionForm(exercises: RoutineExerciseResponse[]) {
+  return this.fb.nonNullable.group({
+    notes: ['', Validators.maxLength(500)],
+    exercises: this.fb.array(exercises.map((e) => this.buildExerciseForm(e))),
+  });
+}
+
+private buildExerciseForm(exercise: RoutineExerciseResponse): LoggedExerciseForm {
+  return this.fb.nonNullable.group({
+    exerciseTemplateId: [exercise.exerciseTemplate.id],
+    notes: ['', Validators.maxLength(255)],
+    sets: this.fb.array(exercise.sets.map((set) => this.buildSetForm(set))),
+  });
+}
+
+private buildSetForm(set: ExerciseSetResponse): LoggedSetForm {
+  return this.fb.nonNullable.group({
+    weightKg: [set.weightKg, [Validators.required, Validators.min(0)]],
+    reps: [set.reps, [Validators.required, Validators.min(0)]],
+    // nonNullable no deja poner null: para un control que admite null se usa fb.control<T | null>
+    rpe: this.fb.control<number | null>(null, [Validators.min(1), Validators.max(10)]),
+    done: [false],
+  });
+}
+```
+
+Como los datos (la rutina) llegan de forma asincrona, el formulario se **deriva** con un `computed`: cuando llega la rutina se crea uno nuevo prellenado. Sin `effect`.
+
+```ts
+sessionForm = computed(() => this.buildSessionForm(this.plannedExercises()));
+```
+
+### 4. Pintarlo: cada directiva "baja un nivel"
+
+```html
+<article [formGroup]="exerciseForm()">            <!-- 1. FormGroup del ejercicio -->
+  <div formArrayName="sets">                      <!-- 2. entra en el FormArray "sets" -->
+    @for (set of exerciseForm().controls.sets.controls; track set; let i = $index) {
+      <div [formGroupName]="i">                   <!-- 3. entra en la serie i -->
+        <input type="number" formControlName="weightKg" />   <!-- 4. sets[i].weightKg -->
+        <input type="checkbox" formControlName="done" />
+      </div>
+    }
+  </div>
+  <textarea formControlName="notes"></textarea>   <!-- vuelve al nivel del ejercicio -->
+</article>
+```
+
+- Es como una ruta de carpetas: `exerciseForm → sets → [i] → weightKg`. Por eso `formControlName="weightKg"` puede repetirse en todas las filas.
+- `formArrayName="sets"` sin corchetes (texto fijo); `[formGroupName]="i"` con corchetes (variable).
+- Se recorre `.controls` y no `.value`: `.value` son solo datos (copia); `.controls` son los objetos vivos (valor + validacion + estado) a los que se conectan los inputs.
+- Doble `.controls`: en un `FormGroup` es un **objeto** con nombres (`controls.sets`); en un `FormArray` es un **array** (`controls[0]`), que es lo que recorre el `@for`.
+
+### 5. Pasar un trozo a un componente hijo
+
+El padre es dueño del formulario completo y le pasa al hijo solo el `FormGroup` del ejercicio seleccionado:
+
+```ts
+// Padre
+selectedExerciseForm = computed(() => this.sessionForm().controls.exercises.at(this.selectedIndex()));
+
+// Hijo
+exerciseForm = input.required<LoggedExerciseForm>();
+```
+
+El `FormGroup` es un objeto: lo que el hijo escribe modifica el formulario del padre (como pasar una referencia en Java). **No hace falta ningun output** para devolver los valores.
+
+### 6. Reaccionar a los cambios en una app zoneless
+
+El formulario **no es una signal**, asi que un `computed` no se entera si cambias un input. Hay que convertir su `valueChanges` (Observable) en signal:
+
+```ts
+private formValue = toSignal(
+  toObservable(this.sessionForm).pipe(
+    // si se crea un formulario nuevo, se deja de escuchar el anterior
+    switchMap((form) => form.valueChanges.pipe(
+      startWith(null),                  // emitir tambien el valor inicial
+      map(() => form.getRawValue())     // valor completo y bien tipado
+    ))
+  ),
+  { initialValue: null }
+);
+
+completedSets = computed(() =>
+  this.formValue()?.exercises.reduce(
+    (total, e) => total + e.sets.filter((s) => s.done).length, 0
+  ) ?? 0
+);
+```
+
+Los cambios **suben por el arbol**: al marcar `done` en una serie, emite el `valueChanges` del formulario raiz.
+
+### 7. Del formulario al request
+
+Un control que solo existe para la UI (`done`) se usa para filtrar y no se copia:
+
+```ts
+const value = this.sessionForm().getRawValue();
+
+const exercises = value.exercises
+  .map((exercise) => ({
+    exerciseTemplateId: exercise.exerciseTemplateId,
+    notes: exercise.notes.trim() || null,
+    sets: exercise.sets
+      .filter((set) => set.done)                       // solo las hechas
+      .map((set, i) => ({ numberSet: i + 1, weightKg: set.weightKg, reps: set.reps, rpe: set.rpe })),
+  }))
+  .filter((exercise) => exercise.sets.length > 0)      // fuera los ejercicios vacios
+  .map((exercise, i) => ({ ...exercise, orderInSession: i + 1 }));
+```
+
+- `getRawValue()` devuelve el valor completo (incluidos controles deshabilitados) y con tipos no opcionales; `.value` los marca todos como opcionales.
+- Validar solo lo que se envia: `set.controls.done.value && set.invalid`.
+
+### 8. `dirty` para "salir sin guardar"
+
+`form.dirty` pasa a `true` en cuanto el usuario cambia cualquier control del arbol. Sirve para decidir si pedir confirmacion al salir sin llevar la cuenta a mano:
+
+```ts
+exit(): void {
+  if (this.sessionForm().dirty) {
+    this.exitDialog().open();
+    return;
+  }
+  this.leave();
+}
+```
+
+---
+
 ## Novedades de Angular 20-21 en reactive forms
 
 - `markAllAsDirty()` (Angular 20): como `markAllAsTouched()`, pero marca los controles como "dirty".
