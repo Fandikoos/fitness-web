@@ -1,0 +1,38 @@
+name: CI - Build and Test
+
+on: 
+    pull_request: 
+        branches: 
+            - main
+    push: 
+        branches: 
+            - main
+
+
+jobs:
+    build-and-test:
+        runs-on: ubuntu-latest       # máquina virtual Linux que pone GitHub gratis
+
+        steps:
+            # 1. Descarga el código del repo en la máquina
+            - name: Checkout
+              uses: actions/checkout@v5
+
+            # 2. Instala Node y guarda en caché las dependencias de npm
+            - name: Setup Node
+              uses: actions/setup-node@v5
+              with:
+                  node-version: 26     # la misma versión que usas en local
+                  cache: npm
+
+            # 3. Instala las dependencias tal cual están en package-lock.json
+            - name: Install dependencies
+              run: npm ci
+
+            # 4. Compila en modo producción (falla si hay errores de TS o de plantilla)
+            - name: Build
+              run: npx ng build
+
+            # 5. Ejecuta los tests una sola vez (sin modo watch)
+            - name: Test
+              run: npx ng test --watch=false

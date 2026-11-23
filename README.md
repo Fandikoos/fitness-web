@@ -1,6 +1,8 @@
 # Fitness Web
 
-Aplicación web para gestionar rutinas de gimnasio y registrar entrenamientos. Es el frontend de **Fitness App** y un proyecto de aprendizaje de Angular moderno: signals, componentes standalone, detección de cambios sin Zone.js (zoneless), carga diferida (lazy loading) y la nueva sintaxis de control de flujo (`@if`, `@for`, `@switch`).
+[![CI - Build and Test](https://github.com/Fandikoos/fitness-web/actions/workflows/ci.yml/badge.svg)](https://github.com/Fandikoos/fitness-web/actions/workflows/ci.yml)
+
+This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.
 
 ## Funcionalidades
 
