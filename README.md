@@ -1,5 +1,7 @@
 # FitnessWeb
 
+[![CI - Build and Test](https://github.com/Fandikoos/fitness-web/actions/workflows/ci.yml/badge.svg)](https://github.com/Fandikoos/fitness-web/actions/workflows/ci.yml)
+
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.1.4.
 
 ## Development server
