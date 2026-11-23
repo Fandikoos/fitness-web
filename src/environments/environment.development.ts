@@ -5,4 +5,5 @@ export const environment = {
     exerciseTemplatesUrl: baseUrl + 'exercise-templates',
     routinesUrl: baseUrl + 'routines',
     programUrl: baseUrl + 'programs',
+    workoutSessionsUrl: baseUrl + 'workout-sessions',
 };

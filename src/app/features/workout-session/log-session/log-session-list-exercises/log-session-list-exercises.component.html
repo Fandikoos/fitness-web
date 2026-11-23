@@ -1,0 +1,54 @@
+<nav aria-label="Ejercicios de la sesión" class="rounded-2xl border border-base-300 bg-base-200 p-2">
+  <ol class="flex flex-col gap-1">
+    @for (exercise of exercises(); track $index; let i = $index) {
+      @let selected = i === selectedIndex();
+      @let completed = exercise.totalSets > 0 && exercise.completedSets === exercise.totalSets;
+
+      <li>
+        <!-- [class] se suma a las clases fijas de class="" -->
+        <button
+          type="button"
+          class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors"
+          [class]="selected ? 'bg-primary/15 ring-1 ring-primary/40' : 'hover:bg-base-300'"
+          [attr.aria-current]="selected ? 'step' : null"
+          (click)="selectExercise.emit(i)"
+        >
+          <!-- Círculo: check si está completado, si no el número de orden -->
+          @if (completed) {
+            <span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-success text-success-content">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="size-4"
+                aria-hidden="true"
+              >
+                <path d="M5 12l5 5L20 7" />
+              </svg>
+              <span class="sr-only">Completado</span>
+            </span>
+          } @else {
+            <span
+              class="flex size-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold"
+              [class]="selected ? 'border-primary text-primary' : 'border-base-content/30 text-base-content/70'"
+            >
+              {{ i + 1 }}
+            </span>
+          }
+
+          <!-- Nombre y series -->
+          <span class="flex min-w-0 flex-col">
+            <span class="truncate text-sm font-semibold">{{ exercise.name }}</span>
+            <span class="text-xs text-base-content/60">
+              {{ exercise.completedSets }} / {{ exercise.totalSets }} series
+            </span>
+          </span>
+        </button>
+      </li>
+    }
+  </ol>
+</nav>

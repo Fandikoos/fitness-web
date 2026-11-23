@@ -1,0 +1,42 @@
+<section
+  class="card border border-base-300 bg-base-200"
+  aria-labelledby="coming-up-title"
+>
+  <div class="card-body gap-3">
+    <h2 id="coming-up-title" class="text-xl font-bold">Próximos días</h2>
+
+    <ul class="flex flex-col gap-2">
+      @for (day of days(); track day.date.getTime()) {
+        <li
+          class="flex items-center justify-between gap-3 rounded-xl bg-base-100 px-3.5 py-3"
+        >
+          <span class="flex min-w-0 flex-col gap-0.5">
+            @if (day.routine; as routine) {
+              <span class="truncate text-sm font-semibold">{{ routine.name }}</span>
+              <span class="text-xs text-base-content/60">
+                {{ routine.exercises.length }}
+                {{ routine.exercises.length === 1 ? "ejercicio" : "ejercicios" }}
+                · {{ countRoutineSets(routine) }}
+                {{ countRoutineSets(routine) === 1 ? "serie" : "series" }}
+              </span>
+            } @else {
+              <span class="text-sm font-semibold">Día de descanso</span>
+              <span class="text-xs text-base-content/60">
+                Sin rutina programada
+              </span>
+            }
+          </span>
+          <span
+            class="shrink-0 text-sm font-semibold text-base-content/80 first-letter:uppercase"
+          >
+            {{ day.date | date: "EEE d" }}
+          </span>
+        </li>
+      } @empty {
+        <li class="text-sm text-base-content/60">
+          No quedan más días esta semana. ¡A por la siguiente!
+        </li>
+      }
+    </ul>
+  </div>
+</section>

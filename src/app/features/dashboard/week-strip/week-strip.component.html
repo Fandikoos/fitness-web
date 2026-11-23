@@ -1,0 +1,113 @@
+<section class="flex flex-col gap-3" aria-labelledby="week-strip-title">
+  <div class="flex items-baseline justify-between">
+    <h2 id="week-strip-title" class="text-xl font-bold">Tu semana</h2>
+    <span class="text-sm text-base-content/60">
+      {{ days()[0].date | date: (sameMonth() ? "d" : "d MMM") }} –
+      {{ days()[days().length - 1].date | date: "d MMM" }}
+    </span>
+  </div>
+
+  <ol class="grid grid-cols-7 gap-1.5 sm:gap-3">
+    @for (day of items(); track day.date.getTime()) {
+      <!-- Hoy: fondo y borde primarios · resto: tarjeta neutra -->
+      <li
+        class="flex min-w-0 flex-col items-center gap-2.5 rounded-2xl border px-1 py-4 text-center sm:px-2"
+        [class]="
+          day.isToday
+            ? 'border-primary/60 bg-primary/10'
+            : 'border-transparent bg-base-200'
+        "
+        [attr.aria-current]="day.isToday ? 'date' : null"
+      >
+        <span
+          class="text-xs font-bold sm:text-sm first-letter:uppercase"
+          [class]="day.isToday ? 'text-primary' : 'text-base-content/60'"
+        >
+          {{ day.date | date: "EEE d" }}
+        </span>
+
+        <!-- Icono de estado -->
+        @switch (day.status) {
+          @case ("done") {
+            <span
+              role="img"
+              [attr.aria-label]="statusLabels.done"
+              class="flex size-9 items-center justify-center rounded-full bg-success text-success-content sm:size-10"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="size-5"
+                aria-hidden="true"
+              >
+                <path d="m4.5 12.75 6 6 9-13.5" />
+              </svg>
+            </span>
+          }
+          @case ("missed") {
+            <span
+              role="img"
+              [attr.aria-label]="statusLabels.missed"
+              class="flex size-9 items-center justify-center rounded-full border-2 border-dashed border-base-content/30 font-bold text-base-content/60 sm:size-10"
+            >
+              –
+            </span>
+          }
+          @case ("today") {
+            <span
+              role="img"
+              [attr.aria-label]="statusLabels.today"
+              class="flex size-9 items-center justify-center rounded-full border-[3px] border-primary bg-primary/15 sm:size-10"
+            >
+              <span class="size-3 rounded-full bg-primary"></span>
+            </span>
+          }
+          @case ("planned") {
+            <span
+              role="img"
+              [attr.aria-label]="statusLabels.planned"
+              class="size-9 rounded-full border-2 border-base-content/25 sm:size-10"
+            ></span>
+          }
+          @case ("rest") {
+            <span
+              role="img"
+              [attr.aria-label]="statusLabels.rest"
+              class="flex size-9 items-center justify-center text-base-content/40 sm:size-10"
+            >
+              <!-- Luna -->
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="size-5"
+                aria-hidden="true"
+              >
+                <path
+                  d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"
+                />
+              </svg>
+            </span>
+          }
+        }
+
+        <!-- En móvil solo cabe el icono: el texto se muestra desde sm -->
+        <span class="hidden w-full min-w-0 flex-col gap-0.5 sm:flex">
+          <span class="truncate text-sm font-semibold" [title]="day.title">
+            {{ day.title }}
+          </span>
+          <span class="text-xs text-base-content/60">{{ day.detail }}</span>
+        </span>
+      </li>
+    }
+  </ol>
+</section>

@@ -1,0 +1,84 @@
+@if (routineResource.isLoading()) {
+  <!-- Carga -->
+  <div class="flex justify-center py-16">
+    <span class="loading loading-spinner loading-lg"></span>
+  </div>
+} @else if (routine(); as routine) {
+  <app-log-session-header
+    [routineName]="routine.name"
+    [completedExercises]="completedExercises()"
+    [totalExercises]="totalExercises()"
+    [completedSets]="completedSets()"
+    [totalSets]="totalSets()"
+    [saving]="saving()"
+    (exit)="exit()"
+    (finish)="finish()"
+  />
+
+  <div
+    class="page-container grid gap-6 py-8 lg:grid-cols-[18rem_1fr] lg:items-start"
+  >
+    <!-- Columna izquierda: sticky para que la lista acompañe al hacer scroll -->
+    <aside class="min-w-0 lg:sticky lg:top-24">
+      <app-log-session-list-exercises
+        [exercises]="exercisesProgress()"
+        [selectedIndex]="selectedIndex()"
+        (selectExercise)="selectedIndex.set($event)"
+      />
+    </aside>
+
+    <section class="flex min-w-0 flex-col gap-6">
+      <!-- Ejercicio actual: recibe SU FormGroup; lo que escriba modifica el formulario del padre -->
+      @if (selectedExercise(); as exercise) {
+        <app-log-session-exercise
+          [routineExercise]="exercise"
+          [exerciseForm]="selectedExerciseForm()"
+          [lastTime]="selectedLastTime()"
+          [lastSessionDate]="workoutSession()?.sessionDate ?? null"
+          [previousName]="previousExerciseName()"
+          [nextName]="nextExerciseName()"
+          (previous)="selectedIndex.update((i) => i - 1)"
+          (next)="selectedIndex.update((i) => i + 1)"
+        />
+      }
+
+      <!-- Notas de la sesión: control directo del formulario raíz -->
+      <fieldset class="fieldset">
+        <legend class="fieldset-legend">Notas de la sesión</legend>
+        <textarea
+          [formControl]="sessionForm().controls.notes"
+          maxlength="500"
+          rows="3"
+          placeholder="¿Qué tal ha ido hoy?"
+          class="textarea w-full"
+        ></textarea>
+      </fieldset>
+    </section>
+  </div>
+} @else {
+  <!-- Error: el interceptor ya muestra el toast -->
+  <div class="page-container py-8">
+    <div class="card border border-base-300 bg-base-200">
+      <div class="card-body items-center text-center">
+        <h2 class="card-title">No se ha podido cargar la rutina</h2>
+        <button
+          type="button"
+          class="btn btn-primary mt-2"
+          (click)="routineResource.reload()"
+        >
+          Reintentar
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Fuera de los @if para que viewChild.required lo encuentre siempre -->
+<app-confirm-dialog
+  #exitDialog
+  title="¿Salir sin guardar?"
+  message="Perderás las series y notas que has registrado en esta sesión."
+  [canDelete]="true"
+  confirmLabel="Salir sin guardar"
+  (confirmed)="leave()"
+/>

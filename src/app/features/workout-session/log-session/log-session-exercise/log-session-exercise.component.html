@@ -1,0 +1,196 @@
+@let exercise = routineExercise();
+
+<!-- [formGroup]: conecta esta tarjeta con el FormGroup del ejercicio -->
+<article class="card border border-base-300 bg-base-200" [formGroup]="exerciseForm()">
+  <div class="card-body gap-5">
+    <!-- Cabecera: imagen, nombre y grupo muscular -->
+    <div class="flex items-center gap-4">
+      <div
+        class="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-base-100 text-base-content/40"
+      >
+        @if (exercise.exerciseTemplate.imageUrl) {
+          <img
+            [src]="exercise.exerciseTemplate.imageUrl"
+            [alt]="exercise.exerciseTemplate.name"
+            class="size-full object-cover"
+          />
+        } @else {
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            class="size-6"
+            aria-hidden="true"
+          >
+            <path d="M6 7v10M3 9v6M18 7v10M21 9v6M6 12h12" />
+          </svg>
+        }
+      </div>
+      <div class="flex min-w-0 flex-col items-start gap-1">
+        <h2 class="truncate text-xl font-bold">{{ exercise.exerciseTemplate.name }}</h2>
+        <span class="badge badge-outline badge-sm uppercase tracking-wide text-base-content/70">
+          {{ exercise.exerciseTemplate.muscleGroup | muscleGroupLabel }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Referencias: última vez y planificado hoy -->
+    <div class="grid gap-3 sm:grid-cols-2">
+      <div class="rounded-xl bg-base-100 p-3">
+        <p class="text-xs text-base-content/60">
+          Última vez
+          @if (lastSessionDate(); as date) {
+            · {{ date | date: 'EEE d MMM' }}
+          }
+        </p>
+        <p class="font-bold">{{ lastTimeSummary() ?? 'Sin registros' }}</p>
+      </div>
+      <div class="rounded-xl bg-base-100 p-3">
+        <p class="text-xs text-base-content/60">Planificado hoy</p>
+        <p class="font-bold">
+          {{ plannedSummary() }}
+          @if (weightDiff(); as diff) {
+            <span class="text-xs font-semibold" [class]="diff > 0 ? 'text-success' : 'text-warning'">
+              {{ diff > 0 ? '+' : '' }}{{ diff | number: '1.0-2' }} kg
+            </span>
+          }
+        </p>
+      </div>
+    </div>
+
+    <!-- Tabla de series. Móvil: se oculta la columna "Última vez" (hidden sm:block) -->
+    <div formArrayName="sets" class="flex flex-col gap-2">
+      <div
+        class="grid grid-cols-[2.5rem_1fr_1fr_1fr_3rem] items-center gap-2 px-3 text-xs font-bold uppercase tracking-wide text-base-content/60 sm:grid-cols-[3rem_1fr_6rem_6rem_5rem_3.5rem]"
+      >
+        <span>Serie</span>
+        <span class="hidden sm:block">Última vez</span>
+        <span class="text-center">Kg</span>
+        <span class="text-center">Reps</span>
+        <span class="text-center">RPE</span>
+        <span class="text-center">Hecha</span>
+      </div>
+
+      @for (set of exerciseForm().controls.sets.controls; track set; let i = $index) {
+        @let done = set.controls.done.value;
+        @let last = lastSetsByNumber().get(i + 1);
+
+        <!-- [formGroupName]="i": esta fila es el FormGroup i del FormArray "sets" -->
+        <div
+          [formGroupName]="i"
+          class="grid grid-cols-[2.5rem_1fr_1fr_1fr_3rem] items-center gap-2 rounded-xl px-3 py-2 transition-colors sm:grid-cols-[3rem_1fr_6rem_6rem_5rem_3.5rem]"
+          [class]="done ? 'bg-success/15' : 'bg-base-300/50'"
+        >
+          <span class="font-semibold">{{ i + 1 }}</span>
+
+          <span class="hidden text-sm text-base-content/60 sm:block">
+            @if (last) {
+              {{ last.weightKg | number: '1.0-2' }} kg × {{ last.reps }}
+            } @else {
+              –
+            }
+          </span>
+
+          <input
+            type="number"
+            formControlName="weightKg"
+            min="0"
+            max="999.99"
+            step="0.5"
+            inputmode="decimal"
+            class="input input-sm w-full text-center"
+            [class.input-error]="set.controls.weightKg.invalid"
+            [attr.aria-label]="'Kg de la serie ' + (i + 1)"
+          />
+          <input
+            type="number"
+            formControlName="reps"
+            min="0"
+            step="1"
+            inputmode="numeric"
+            class="input input-sm w-full text-center"
+            [class.input-error]="set.controls.reps.invalid"
+            [attr.aria-label]="'Repeticiones de la serie ' + (i + 1)"
+          />
+          <input
+            type="number"
+            formControlName="rpe"
+            min="1"
+            max="10"
+            step="1"
+            inputmode="numeric"
+            placeholder="–"
+            class="input input-sm w-full text-center"
+            [class.input-error]="set.controls.rpe.invalid"
+            [attr.aria-label]="'RPE de la serie ' + (i + 1)"
+          />
+          <input
+            type="checkbox"
+            formControlName="done"
+            class="checkbox checkbox-success justify-self-center"
+            [attr.aria-label]="'Serie ' + (i + 1) + ' hecha'"
+          />
+        </div>
+      }
+    </div>
+
+    <!-- Notas del ejercicio -->
+    <fieldset class="fieldset">
+      <legend class="fieldset-legend">Notas</legend>
+      <textarea
+        formControlName="notes"
+        maxlength="255"
+        rows="2"
+        placeholder="p. ej. molestia en el hombro izquierdo"
+        class="textarea w-full"
+      ></textarea>
+    </fieldset>
+
+    <!-- Navegación anterior / siguiente -->
+    <div class="flex items-center justify-between gap-3 border-t border-base-300 pt-4">
+      @if (previousName(); as name) {
+        <button type="button" class="btn btn-ghost btn-sm max-w-[48%]" (click)="previous.emit()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="size-4 shrink-0"
+            aria-hidden="true"
+          >
+            <path d="m15 18-6-6 6-6" />
+          </svg>
+          <span class="truncate">{{ name }}</span>
+        </button>
+      } @else {
+        <!-- Hueco vacío para que "Siguiente" siga a la derecha -->
+        <span></span>
+      }
+
+      @if (nextName(); as name) {
+        <button type="button" class="btn btn-outline btn-sm max-w-[48%]" (click)="next.emit()">
+          <span class="truncate">Siguiente: {{ name }}</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="size-4 shrink-0"
+            aria-hidden="true"
+          >
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+        </button>
+      }
+    </div>
+  </div>
+</article>

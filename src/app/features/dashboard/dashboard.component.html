@@ -21,17 +21,88 @@
         </button>
       </div>
     </div>
-  } @else if (activeProgram()) {
+  } @else if (activeProgram(); as program) {
     <!-- Programa activo -->
-    <div class="flex flex-col gap-8">
-      <app-calendar
-        [programName]="programName()"
-        [routines]="routines()"
-        [selectedDate]="selectedDate()"
-        (selectedDayOfWeek)="handleSelectedDayOfWeek($event)"
-      />
+    <div class="flex flex-col gap-6">
+      <!-- Cabecera -->
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p class="text-sm text-base-content/60 first-letter:uppercase">
+            {{ today | date: "EEEE, d 'de' MMMM 'de' y" }}
+          </p>
+          <h1 class="text-4xl font-bold mt-1">Hoy</h1>
+        </div>
 
-      <app-summary-workout [routine]="selectedRoutine()" />
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-base-content/60">Programa activo</span>
+          <span
+            class="badge badge-success badge-soft badge-lg rounded-full font-semibold"
+          >
+            {{ program.name }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Tarjeta de hoy + estadísticas de la semana -->
+      <div class="grid gap-6 lg:grid-cols-3">
+        <app-today-card
+          class="lg:col-span-2"
+          [routine]="todayRoutine()"
+          [lastDoneDate]="todayRoutineLastDate()"
+          [(exercisesVisible)]="showExercises"
+        />
+
+        @if (weekSessionsResource.error()) {
+          <!-- Si fallan las sesiones, la tarjeta de hoy sigue funcionando -->
+          <section
+            class="card border border-base-300 bg-base-200"
+            aria-label="Esta semana"
+          >
+            <div class="card-body items-center justify-center text-center gap-3">
+              <p class="text-sm text-base-content/70">
+                No se han podido cargar tus sesiones de esta semana.
+              </p>
+              <button
+                type="button"
+                class="btn btn-sm btn-outline"
+                (click)="weekSessionsResource.reload()"
+              >
+                Reintentar
+              </button>
+            </div>
+          </section>
+        } @else if (weekSessionsResource.hasValue()) {
+          <app-week-stats [stats]="weekStats()" />
+        } @else {
+          <div class="skeleton min-h-36 rounded-2xl"></div>
+        }
+      </div>
+
+      <!-- Ejercicios de hoy (se despliegan desde la tarjeta de hoy) -->
+      @if (showExercises() && todayRoutine(); as routine) {
+        <app-routine-exercises id="today-exercises" [routine]="routine" />
+      }
+
+      <!-- Tira de la semana: solo cuando ya tenemos las sesiones, para no marcar
+           como "no entrenado" un día que sí lo está -->
+      @if (weekSessionsResource.hasValue()) {
+        <app-week-strip [days]="weekDays()" />
+      } @else if (!weekSessionsResource.error()) {
+        <div class="skeleton h-40 rounded-2xl"></div>
+      }
+
+      <!-- Última sesión + próximos días -->
+      <div class="grid gap-6 lg:grid-cols-3 lg:items-start">
+        <div class="lg:col-span-2">
+          @if (weekSessionsResource.hasValue()) {
+            <app-last-session [session]="lastSession()" />
+          } @else if (!weekSessionsResource.error()) {
+            <div class="skeleton h-48 rounded-2xl"></div>
+          }
+        </div>
+
+        <app-coming-up [days]="upcomingDays()" />
+      </div>
     </div>
   } @else {
     <!-- Sin programa activo (el backend ha respondido 204) -->
