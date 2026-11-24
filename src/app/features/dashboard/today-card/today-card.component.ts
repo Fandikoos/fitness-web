@@ -2,13 +2,12 @@ import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, model } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { RoutineResponse } from '../../../shared/interfaces/routine.interface';
-import { DayLabelPipe } from '../../../shared/pipes/day-label.pipe';
 import { parseIsoDate } from '../../../shared/utils/dates';
 import { countRoutineSets } from '../week-summary';
 
 @Component({
   selector: 'app-today-card',
-  imports: [DatePipe, DayLabelPipe, RouterLink],
+  imports: [DatePipe, RouterLink],
   templateUrl: './today-card.component.html',
   styleUrl: './today-card.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

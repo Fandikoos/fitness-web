@@ -13,10 +13,10 @@
           <span class="flex min-w-0 flex-col gap-0.5">
             @if (day.routine; as routine) {
               <span class="truncate text-sm font-semibold">{{ routine.name }}</span>
-              <span class="text-xs text-base-content/60">
+              <span class="text-xs text-base-content/60 tabular-nums">
                 {{ routine.exercises.length }}
                 {{ routine.exercises.length === 1 ? "ejercicio" : "ejercicios" }}
-                · {{ countRoutineSets(routine) }}
+                y {{ countRoutineSets(routine) }}
                 {{ countRoutineSets(routine) === 1 ? "serie" : "series" }}
               </span>
             } @else {
