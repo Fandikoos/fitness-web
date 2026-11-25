@@ -25,7 +25,7 @@ src/app/
 │   ├── dashboard/      # Home: today card, week stats/strip, last session, coming up (week-summary.ts = pure calcs)
 │   ├── exercise/       # list-exercises (modal picker), select-exercises
 │   ├── program/        # list-programs
-│   ├── workout-session/ # log-session (/workout-sessions/new?routineId=X)
+│   ├── workout-session/ # history-workout-sessions (/workout-sessions, weekly history + delete), workout-session-detail (/workout-sessions/:id), log-session (/workout-sessions/new?routineId=X)
 │   └── routine/
 │       ├── routine.routes.ts   # Child routes of /routines (default array export)
 │       └── create/             # 2-step routine creation wizard (step-1, step-2)
@@ -57,6 +57,14 @@ src/app/
 - **DaisyUI v5** as Tailwind plugin — use DaisyUI component classes (`btn`, `card`, `modal`, `input`, `navbar`, `drawer`, etc.) as the primary UI kit
 - Global styles in `src/styles.css`: `@import "tailwindcss"` + `@plugin "daisyui"`
 - Components use DaisyUI's theming system; prefer DaisyUI semantic classes over raw Tailwind when a matching component exists
+
+### Visual direction
+
+The owner likes the current look; design work (including the `frontend-design` skill) must improve it, not replace it:
+- **Colors:** keep DaisyUI's default light/dark themes and its semantic colors (`primary`, `success`, `base-100`…). Don't add custom themes, palettes or hex colors.
+- **Typography:** one family, **Archivo** (variable, loaded in `index.html`). Body text at normal width; headings (`h1`–`h3`, `.card-title`) slightly wider via `font-stretch` in `styles.css`. Don't add other fonts.
+- **Layout:** keep the DaisyUI card-based layout. Improvements should target hierarchy, spacing, copy and states (loading, empty, error), not the overall identity.
+- A full redesign (custom theme, display font, removing cards) was tried on 2026-11-24 and rejected: don't propose it again unless asked.
 
 ## Angular 22 Conventions
 

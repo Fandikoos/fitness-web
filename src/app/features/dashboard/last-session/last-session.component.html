@@ -3,21 +3,29 @@
   aria-labelledby="last-session-title"
 >
   <div class="card-body gap-4">
+    <!-- Cabecera común a los dos estados: título + enlace al historial -->
+    <div class="flex items-baseline justify-between gap-3">
+      <h2 id="last-session-title" class="text-xl font-bold">Última sesión</h2>
+      <a routerLink="/workout-sessions" class="link link-primary shrink-0 text-sm font-semibold no-underline">
+        Ver historial
+      </a>
+    </div>
+
     @if (session(); as session) {
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <div class="flex min-w-0 flex-col gap-1">
-          <h2 id="last-session-title" class="text-xl font-bold">
-            Última sesión
-          </h2>
-          <p class="text-sm text-base-content/60">
-            {{ session.routineName }} · {{ date() | date: "EEE d MMM" }} ·
-            {{ totalSets() }} {{ totalSets() === 1 ? "serie" : "series" }} ·
-            {{ volumeKg() | volume }}
-          </p>
-        </div>
-        <span class="badge badge-success badge-soft rounded-full font-semibold">
-          Completada
-        </span>
+      <div class="flex min-w-0 flex-col gap-1">
+        <p class="text-sm text-base-content/60">
+          <span class="first-letter:uppercase inline-block">{{
+            date() | date: "EEEE d 'de' MMMM"
+          }}</span
+          >: <!-- Clic en la rutina → detalle de la sesión -->
+          <a
+            [routerLink]="['/workout-sessions', session.id]"
+            class="link link-hover font-semibold text-base-content"
+            >{{ session.routineName }}</a
+          >, {{ totalSets() }}
+          {{ totalSets() === 1 ? "serie" : "series" }} y
+          {{ volumeKg() | volume }} de volumen.
+        </p>
       </div>
 
       @if (session.notes) {
@@ -32,13 +40,14 @@
             <span class="min-w-0 truncate text-base-content/80">
               {{ exercise.name }}
             </span>
-            <span class="shrink-0 font-semibold">{{ exercise.best }}</span>
+            <span class="shrink-0 font-semibold tabular-nums">{{
+              exercise.best
+            }}</span>
           </li>
         }
       </ul>
     } @else {
       <!-- Estado vacío: semana sin sesiones todavía -->
-      <h2 id="last-session-title" class="text-xl font-bold">Última sesión</h2>
       <p class="text-base-content/60">
         Todavía no has entrenado esta semana. Cuando registres una sesión verás
         aquí su resumen.

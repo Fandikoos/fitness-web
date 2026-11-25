@@ -23,6 +23,7 @@ export class NavbarComponent {
   readonly navbarOptions: NavbarOption[] = [
     { label: 'Hoy', route: '/', exact: true },
     { label: 'Programas', route: '/programs', exact: false },
+    { label: 'Historial', route: '/workout-sessions', exact: false },
   ];
 
   startNewProgram(): void {
