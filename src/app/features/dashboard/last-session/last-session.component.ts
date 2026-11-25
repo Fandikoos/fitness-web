@@ -1,5 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { WorkoutSessionResponse } from '../../../shared/interfaces/workout-session.interface';
 import { VolumePipe } from '../../../shared/pipes/volume.pipe';
 import { parseIsoDate } from '../../../shared/utils/dates';
@@ -7,7 +8,7 @@ import { bestSetLabel, countSessionSets, sessionVolumeKg } from '../week-summary
 
 @Component({
   selector: 'app-last-session',
-  imports: [DatePipe, VolumePipe],
+  imports: [DatePipe, RouterLink, VolumePipe],
   templateUrl: './last-session.component.html',
   styleUrl: './last-session.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

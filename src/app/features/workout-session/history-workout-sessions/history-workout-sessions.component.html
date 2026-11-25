@@ -1,0 +1,150 @@
+<div class="page-container py-8">
+  <div class="flex flex-col gap-6">
+    <!-- Cabecera: título + selector de semana -->
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h1 class="text-4xl font-bold">Historial</h1>
+        <p class="mt-1 text-sm text-base-content/60">
+          Tus sesiones registradas, semana a semana.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        @if (!isCurrentWeek()) {
+          <button type="button" class="btn btn-outline" (click)="goToCurrentWeek()">
+            Esta semana
+          </button>
+        }
+
+        <div class="flex items-center rounded-box border border-base-300 bg-base-200">
+          <button
+            type="button"
+            class="btn btn-ghost btn-square"
+            aria-label="Semana anterior"
+            (click)="previousWeek()"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-5" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+            </svg>
+          </button>
+
+          <!-- aria-live: el lector de pantalla anuncia la semana nueva al cambiarla -->
+          <div class="flex min-w-48 flex-col items-center px-2 tabular-nums" aria-live="polite">
+            <span class="font-bold">{{ rangeLabel() }}</span>
+            <span class="text-xs text-base-content/60">{{ rangeHint() }}</span>
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-ghost btn-square"
+            aria-label="Semana siguiente"
+            [disabled]="isCurrentWeek()"
+            (click)="nextWeek()"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-5" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    @if (sessionsResource.error()) {
+      <!-- Error: el interceptor ya muestra el toast, aquí damos la opción de reintentar -->
+      <div class="card border border-base-300 bg-base-200">
+        <div class="card-body items-center text-center">
+          <h2 class="card-title">No se han podido cargar tus sesiones</h2>
+          <p class="text-base-content/60">Comprueba tu conexión e inténtalo de nuevo.</p>
+          <button type="button" class="btn btn-primary mt-2" (click)="sessionsResource.reload()">
+            Reintentar
+          </button>
+        </div>
+      </div>
+    } @else if (sessionsResource.hasValue()) {
+      <!-- Resumen de la semana (tabular-nums: las cifras no "bailan" al cambiar) -->
+      <dl class="grid grid-cols-3 gap-3 tabular-nums">
+        <div class="flex flex-col gap-1 rounded-box bg-base-200 p-4">
+          <dt class="text-sm text-base-content/60">Sesiones</dt>
+          <dd class="text-2xl font-bold">{{ stats().sessions }}</dd>
+        </div>
+        <div class="flex flex-col gap-1 rounded-box bg-base-200 p-4">
+          <dt class="text-sm text-base-content/60">Series</dt>
+          <dd class="text-2xl font-bold">{{ stats().sets }}</dd>
+        </div>
+        <div class="flex flex-col gap-1 rounded-box bg-base-200 p-4">
+          <dt class="text-sm text-base-content/60">Volumen</dt>
+          <dd class="text-2xl font-bold whitespace-nowrap">{{ stats().volumeKg | volume }}</dd>
+        </div>
+      </dl>
+
+      @if (rows().length > 0) {
+        <!-- Lista de sesiones: el backend ya las devuelve de la más reciente a la más antigua -->
+        <ul class="flex flex-col gap-3" aria-label="Sesiones de la semana">
+          @for (row of rows(); track row.session.id) {
+            <li class="card border border-base-300 bg-base-200">
+              <div class="card-body flex-row flex-wrap items-center gap-x-5 gap-y-3 p-4">
+                <!-- Fecha: día de la semana + número -->
+                <div class="flex w-14 shrink-0 flex-col items-center rounded-field bg-base-100 py-2">
+                  <span class="text-xs font-bold uppercase text-primary">{{ row.date | date: "EEE" }}</span>
+                  <span class="text-2xl font-bold leading-tight tabular-nums">{{ row.date | date: "d" }}</span>
+                </div>
+
+                <div class="flex min-w-0 flex-[1_1_16rem] flex-col gap-1">
+                  <span class="truncate text-lg font-bold">{{ row.session.routineName }}</span>
+                  <span class="text-sm text-base-content/60 tabular-nums">
+                    {{ row.exercises }} {{ row.exercises === 1 ? "ejercicio" : "ejercicios" }}
+                    · {{ row.sets }} {{ row.sets === 1 ? "serie" : "series" }}
+                    · {{ row.volumeKg | volume }}
+                  </span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <a [routerLink]="['/workout-sessions', row.session.id]" class="btn btn-outline">
+                    Ver detalle
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    </svg>
+                  </a>
+                  <button
+                    type="button"
+                    class="btn btn-square btn-outline btn-error"
+                    [attr.aria-label]="'Eliminar sesión ' + row.session.routineName + ' del ' + row.longDate"
+                    (click)="askDelete(row)"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="size-5" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <!-- Estado vacío -->
+        <div class="card border border-base-300 bg-base-200">
+          <div class="card-body items-center gap-2 py-12 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor" class="size-8 text-base-content/40" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+            </svg>
+            <h2 class="card-title text-lg">No hay sesiones esta semana</h2>
+            <p class="text-sm text-base-content/60">Usa las flechas para ver otras semanas.</p>
+          </div>
+        </div>
+      }
+    } @else {
+      <!-- Carga (también al cambiar de semana) -->
+      <div class="flex justify-center py-16">
+        <span class="loading loading-spinner loading-lg"></span>
+      </div>
+    }
+  </div>
+</div>
+
+<app-confirm-dialog
+  #deleteDialog
+  title="¿Eliminar esta sesión?"
+  [message]="deleteMessage()"
+  [canDelete]="true"
+  (confirmed)="confirmDelete()"
+/>

@@ -25,7 +25,7 @@ src/app/
 │   ├── dashboard/      # Home: today card, week stats/strip, last session, coming up (week-summary.ts = pure calcs)
 │   ├── exercise/       # list-exercises (modal picker), select-exercises
 │   ├── program/        # list-programs
-│   ├── workout-session/ # log-session (/workout-sessions/new?routineId=X)
+│   ├── workout-session/ # history-workout-sessions (/workout-sessions, weekly history + delete), workout-session-detail (/workout-sessions/:id), log-session (/workout-sessions/new?routineId=X)
 │   └── routine/
 │       ├── routine.routes.ts   # Child routes of /routines (default array export)
 │       └── create/             # 2-step routine creation wizard (step-1, step-2)

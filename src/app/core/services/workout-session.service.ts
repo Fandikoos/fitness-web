@@ -27,4 +27,11 @@ export class WorkoutSessionService {
     });
   }
 
+  getById(idWorkoutSession: number): Observable<WorkoutSessionResponse> {
+    return this.http.get<WorkoutSessionResponse>(`${this.url}/${idWorkoutSession}`);
+  }
+
+  delete(idWorkoutSession: number): Observable<void> {
+    return this.http.delete<void>(`${this.url}/${idWorkoutSession}`);
+  }
 }
