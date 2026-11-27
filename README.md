@@ -126,6 +126,19 @@ gh pr create --fill                        # o desde la web de GitHub
 En español y con el formato `tipo: descripción` (`feat`, `fix`, `refactor`, `docs`, `chore`, `test`).
 El título del PR es el que acaba como commit en `main` al hacer squash, así que cuídalo más que los commits intermedios.
 
+### Actualizaciones de dependencias (Dependabot)
+[Dependabot](.github/dependabot.yml) revisa cada semana `npm` y las `github-actions` y abre un PR por actualización. Los paquetes `@angular/*` van en un mismo PR (Angular se actualiza entero), y el resto de versiones menores y parches se juntan en otro.
+
+| Tipo de cambio | Ejemplo | Qué hacer |
+|----------------|---------|-----------|
+| **Parche** | `4.3.3 → 4.3.5` | Si la CI está en verde, se mergea directamente. |
+| **Menor** | `22.2 → 22.3` | Si la CI está en verde, se mergea. Si cambia algo visual (DaisyUI, Tailwind), se mira la app con `ng serve` antes. |
+| **Mayor** | `Angular 22 → 23` | No se mergea a ciegas. Hay que leer las *release notes* y, si requiere cambios en el código, crear una tarjeta propia en Trello. |
+
+- Los PR de Dependabot se mergean **de uno en uno**: todos tocan `package-lock.json`, y Dependabot hace rebase de los demás él solo después de cada merge.
+- No se hacen commits a mano en las ramas de Dependabot, porque deja de gestionarlas. Se le dan órdenes con comentarios en el PR: `@dependabot rebase`, `@dependabot recreate` o `@dependabot ignore this major version`.
+- En las actions (`actions/checkout`, `actions/setup-node`…), una versión mayor con la CI en verde suele ser segura, porque el propio workflow ya las está usando.
+
 ## Notas de aprendizaje
 
 En [notes/](notes/) hay apuntes en español sobre los conceptos de Angular que usa el proyecto: signals, `rxResource`, interceptores, formularios reactivos, modales, zoneless… [notes/angular-22-novedades.md](notes/angular-22-novedades.md) resume lo que cambió de Angular 19 a 22.
