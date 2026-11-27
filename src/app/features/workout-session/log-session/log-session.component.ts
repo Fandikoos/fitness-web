@@ -118,9 +118,15 @@ export class LogSessionComponent {
     this.formValue()?.exercises.map((exercise) => exercise.sets.filter((set) => set.done).length) ?? []
   );
 
+  // Series de cada ejercicio según el FORMULARIO (no lo planificado): así cuentan
+  // las series que se añaden o quitan durante la sesión
+  private totalSetsPerExercise = computed(() =>
+    this.formValue()?.exercises.map((exercise) => exercise.sets.length) ?? []
+  );
+
   totalExercises = computed(() => this.plannedExercises().length);
   totalSets = computed(() =>
-    this.plannedExercises().reduce((total, exercise) => total + exercise.sets.length, 0)
+    this.totalSetsPerExercise().reduce((total, sets) => total + sets, 0)
   );
 
   completedSets = computed(() =>
@@ -129,8 +135,8 @@ export class LogSessionComponent {
 
   // Un ejercicio está completado cuando todas sus series están hechas
   completedExercises = computed(() =>
-    this.plannedExercises().filter((exercise, i) =>
-      exercise.sets.length > 0 && this.completedSetsPerExercise()[i] === exercise.sets.length
+    this.totalSetsPerExercise().filter((total, i) =>
+      total > 0 && this.completedSetsPerExercise()[i] === total
     ).length
   );
 
@@ -139,9 +145,29 @@ export class LogSessionComponent {
     this.plannedExercises().map((exercise, i) => ({
       name: exercise.exerciseTemplate.name,
       completedSets: this.completedSetsPerExercise()[i] ?? 0,
-      totalSets: exercise.sets.length,
+      totalSets: this.totalSetsPerExercise()[i] ?? 0,
     }))
   );
+
+  // ---- Añadir / quitar series ----
+
+  // Añade una serie al final copiando kg y reps de la última (lo normal en una
+  // serie extra o una dropset es partir de ahí). Sin series previas, empieza en 0.
+  addSet(exerciseIndex: number): void {
+    const sets = this.sessionForm().controls.exercises.at(exerciseIndex).controls.sets;
+    const last = sets.length > 0 ? sets.at(sets.length - 1).getRawValue() : null;
+    sets.push(this.buildSetForm({ weightKg: last?.weightKg ?? 0, reps: last?.reps ?? 0 }));
+    // push() no marca el formulario como modificado: lo hacemos a mano para que
+    // "Salir" pida confirmación antes de descartar los cambios
+    sets.markAsDirty();
+  }
+
+  // removeAt() reindexa el FormArray: las series siguientes "suben" un número
+  removeSet(exerciseIndex: number, setIndex: number): void {
+    const sets = this.sessionForm().controls.exercises.at(exerciseIndex).controls.sets;
+    sets.removeAt(setIndex);
+    sets.markAsDirty();
+  }
 
   exit(): void {
     // Si no has tocado nada no hay nada que perder: salimos directamente.
@@ -243,8 +269,9 @@ export class LogSessionComponent {
     });
   }
 
-  // Prellenado con lo planificado. Las validaciones replican las del backend (LoggedSetRequest)
-  private buildSetForm(set: ExerciseSetResponse): LoggedSetForm {
+  // Prellenado con lo planificado (o con la serie copiada en addSet).
+  // Las validaciones replican las del backend (LoggedSetRequest)
+  private buildSetForm(set: Pick<ExerciseSetResponse, 'weightKg' | 'reps'>): LoggedSetForm {
     return this.fb.nonNullable.group({
       weightKg: [set.weightKg, [Validators.required, Validators.min(0), Validators.max(999.99)]],
       reps: [set.reps, [Validators.required, Validators.min(0)]],
