@@ -39,6 +39,8 @@
           [nextName]="nextExerciseName()"
           (previous)="selectedIndex.update((i) => i - 1)"
           (next)="selectedIndex.update((i) => i + 1)"
+          (addSet)="addSet(selectedIndex())"
+          (removeSet)="removeSet(selectedIndex(), $event)"
         />
       }
 

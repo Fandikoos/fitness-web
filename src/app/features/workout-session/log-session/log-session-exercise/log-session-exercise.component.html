@@ -64,7 +64,7 @@
     <!-- Tabla de series. Móvil: se oculta la columna "Última vez" (hidden sm:block) -->
     <div formArrayName="sets" class="flex flex-col gap-2">
       <div
-        class="grid grid-cols-[2.5rem_1fr_1fr_1fr_3rem] items-center gap-2 px-3 text-xs font-bold uppercase tracking-wide text-base-content/60 sm:grid-cols-[3rem_1fr_6rem_6rem_5rem_3.5rem]"
+        class="grid grid-cols-[2.5rem_1fr_1fr_1fr_3rem_2rem] items-center gap-2 px-3 text-xs font-bold uppercase tracking-wide text-base-content/60 sm:grid-cols-[3rem_1fr_6rem_6rem_5rem_3.5rem_2.5rem]"
       >
         <span>Serie</span>
         <span class="hidden sm:block">Última vez</span>
@@ -72,6 +72,7 @@
         <span class="text-center">Reps</span>
         <span class="text-center">RPE</span>
         <span class="text-center">Hecha</span>
+        <span class="sr-only">Quitar</span>
       </div>
 
       @for (set of exerciseForm().controls.sets.controls; track set; let i = $index) {
@@ -81,7 +82,7 @@
         <!-- [formGroupName]="i": esta fila es el FormGroup i del FormArray "sets" -->
         <div
           [formGroupName]="i"
-          class="grid grid-cols-[2.5rem_1fr_1fr_1fr_3rem] items-center gap-2 rounded-xl px-3 py-2 transition-colors sm:grid-cols-[3rem_1fr_6rem_6rem_5rem_3.5rem]"
+          class="grid grid-cols-[2.5rem_1fr_1fr_1fr_3rem_2rem] items-center gap-2 rounded-xl px-3 py-2 transition-colors sm:grid-cols-[3rem_1fr_6rem_6rem_5rem_3.5rem_2.5rem]"
           [class]="done ? 'bg-success/15' : 'bg-base-300/50'"
         >
           <span class="font-semibold">{{ i + 1 }}</span>
@@ -133,8 +134,47 @@
             class="checkbox checkbox-success justify-self-center"
             [attr.aria-label]="'Serie ' + (i + 1) + ' hecha'"
           />
+          <!-- Quitar serie: deshabilitado si es la única (para saltarte el ejercicio basta con no marcarla) -->
+          <button
+            type="button"
+            class="btn btn-ghost btn-xs btn-square justify-self-center text-base-content/50 hover:text-error"
+            [disabled]="exerciseForm().controls.sets.length === 1"
+            [attr.aria-label]="'Quitar serie ' + (i + 1)"
+            title="Quitar serie"
+            (click)="removeSet.emit(i)"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              class="size-4"
+              aria-hidden="true"
+            >
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       }
+
+      <!-- Serie extra o dropset: copia kg y reps de la última serie -->
+      <button type="button" class="btn btn-ghost btn-sm self-start" (click)="addSet.emit()">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          class="size-4"
+          aria-hidden="true"
+        >
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+        Añadir serie
+      </button>
     </div>
 
     <!-- Notas del ejercicio -->

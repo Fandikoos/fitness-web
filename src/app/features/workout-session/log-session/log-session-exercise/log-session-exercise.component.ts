@@ -31,6 +31,11 @@ export class LogSessionExerciseComponent {
   previous = output<void>();
   next = output<void>();
 
+  // Añadir / quitar series: el FormArray es del padre, así que solo avisamos.
+  // removeSet emite la posición de la serie dentro del FormArray
+  addSet = output<void>();
+  removeSet = output<number>();
+
   // Series de la última vez indexadas por numberSet, para la columna "Última vez"
   lastSetsByNumber = computed(() =>
     new Map((this.lastTime()?.sets ?? []).map((set) => [set.numberSet, set]))
