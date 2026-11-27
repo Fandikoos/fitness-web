@@ -16,7 +16,7 @@ jobs:
         steps:
             # 1. Descarga el código del repo en la máquina
             - name: Checkout
-              uses: actions/checkout@v5
+              uses: actions/checkout@v7
 
             # 2. Instala Node y guarda en caché las dependencias de npm
             - name: Setup Node
